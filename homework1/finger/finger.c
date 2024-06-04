@@ -6,113 +6,72 @@
 
 int main(int argc, char* argv[]) {
 
-  // allocate the necessary memory (but first clean it)
-  options_t *options = malloc(sizeof(options_t));
-  if (options == NULL) {
+  int status = EXIT_SUCCESS;
+
+  finger_t* finger = malloc(sizeof(finger_t));
+  if (finger == NULL) {
     printf("There was an error allocating the memory.\n");
     return EXIT_FAILURE;
   }
 
-  int result = parseOptions(argc, argv, options);
-  if (result == EXIT_FAILURE) {
-    return result;
+  status = build(argc, argv, finger);
+  if (status == EXIT_FAILURE) {
+    printHelp();
+    return status;
   }
 
-  char **users = (char**) calloc(1, sizeof(char*));
-  if (users == NULL) {
-    printf("There was an error allocating the memory.\n");
-    return EXIT_FAILURE;
-  }
-  int usersSize = 0;
-  result = parseUsers(argc, argv, users, &usersSize);
-  if (result == EXIT_FAILURE) {
-    return result;
-  }
+  // FIXME it's a test, remove it
+  printf("Options:\n");
+  printf("\tisMultiLine: %d\n", finger->format->isMultiLine);
+  printf("\tuseRealName: %d\n", finger->format->useRealName);
+  printf("\tshowSpecialFiles: %d\n", finger->format->showSpecialFiles);
 
+  // FIXME it's a test, remove it
+  for (int i = 0; i < finger->usersSize; i++) {
+    printf("The %dth user is %s\n", i+1, finger->users[i]);
+  }
 
   // release the allocated memory
-  free(options);
-  for (int i = 0; i < usersSize; i++) {
-    free(users[i]);
-  }
-  free(users);
+  release(finger);
 
-  return result;
+  return status;
 }
 
-int parseOptions(int argc, char* argv[], options_t *options) {
-  // check the provided arguments
-  // skip the first argument that is the program name
-  for (int i = 1; i < argc; i++) {
+int build(int argc, char* argv[], finger_t* finger) {
+  int status = EXIT_SUCCESS;
 
-    // check if the argument is an option
-    if (argv[i][0] == '-') {
-      // a string is an array of characters
-      // in which the \0 is the termination character
-      for (int j = 1; argv[i][j] != '\0'; j++) {
-        bool found = false;
-        if (argv[i][j] == 'l') {
-          options->l = true;
-          found = true;
-        }
-        if (argv[i][j] == 'm') {
-          options->m = true;
-          found = true;
-        }
-        if (argv[i][j] == 's') {
-          options->s = true;
-          found = true;
-        }
-        if (argv[i][j] == 'p') {
-          options->p = true;
-          found = true;
-        }
-
-        if (found == false) {
-          printf("finger: invalid option -- '%c'\n", argv[i][j]);
-          printHelp();
-          return EXIT_FAILURE;
-        }
-      }
-    }
+  // allocate the necessary memory (but first clean it)
+  finger->format = malloc(sizeof(format_t));
+  if (finger->format == NULL) {
+    printf("There was an error allocating the memory.\n");
+    return EXIT_FAILURE;
   }
 
-  return EXIT_SUCCESS;
+  char **users = NULL;
+  status = parseUsers(argc, argv, finger);
+  if (status == EXIT_FAILURE) {
+    return status;
+  }
+
+  status = parseOptions(argc, argv, finger);
+  if (status == EXIT_FAILURE) {
+    return status;
+  }
+
+  return status;
 }
 
-int parseUsers(int argc, char* argv[], char **users, int *usersSize) {
-  // check the provided arguments
-  // skip the first argument that is the program name
-  int count = 0;
-  for (int i = 1; i < argc; i++) {
-
-    // check if the argument is a user
-    if (argv[i][0] != '-') {
-
-      if (count > 0) {
-        // re-allocate memory for new users
-        users = (char**) realloc(users, (count + 1) * sizeof(char*));
-        if (users == NULL) {
-          printf("There was an error allocating the memory.\n");
-          return EXIT_FAILURE;
-        }
-      }
-      // allocate memory for user information
-      users[count] = (char*) calloc(USER_LENGTH, sizeof(char));
-      if (users[count] == NULL) {
-        printf("There was an error allocating the memory.\n");
-        return EXIT_FAILURE;
-      }
-
-      strncpy(users[count], argv[i], USER_LENGTH);
-      count++;
-    }
+int release(finger_t* finger) {
+  // release the allocated memory
+  free(finger->format);
+  for (int i = 0; i < finger->usersSize; i++) {
+    free(finger->users[i]);
   }
+  free(finger->users);
 
-  *usersSize = count;
   return EXIT_SUCCESS;
 }
 
 void printHelp() {
-  printf("usage: finger [-lmps] [login ...]\n");
+  printf("usage: finger [-lmsp] [user ...]\n");
 }
