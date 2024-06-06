@@ -1,6 +1,5 @@
 #include <stdbool.h> // included to use the bool data type
-
-#define USER_LENGTH 100
+#include <utmp.h>
 
 typedef struct {
   bool isMultiLine;
@@ -13,6 +12,9 @@ typedef struct {
   char **users;
   int usersSize;
 } finger_t;
+
+int addInitialUser(char* user, finger_t* finger);
+int addUser(char* user, finger_t* finger);
 
 int parseOptions(int argc, char* argv[], finger_t* finger);
 int parseUsers(int argc, char* argv[], finger_t* finger);

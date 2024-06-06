@@ -1,7 +1,3 @@
-#include <stdio.h> // included to use printing functions
-#include <stdlib.h> // included to use the exit status
-#include <string.h> // included to use string functions
-#include <stdbool.h> // included to use the bool data type
 #include "finger.h"
 
 int main(int argc, char* argv[]) {
@@ -20,15 +16,37 @@ int main(int argc, char* argv[]) {
     return status;
   }
 
-  // FIXME it's a test, remove it
-  printf("Options:\n");
-  printf("\tisMultiLine: %d\n", finger->format->isMultiLine);
-  printf("\tuseRealName: %d\n", finger->format->useRealName);
-  printf("\tshowSpecialFiles: %d\n", finger->format->showSpecialFiles);
+  // if no user is specified as argument
+  if (finger->usersSize <= 0) {
+    // retrieve the currently logged user
+    char* currentUser = getlogin();
+    addInitialUser(currentUser, finger);
+  }
 
-  // FIXME it's a test, remove it
+  char aux[UT_NAMESIZE];
+  struct utmp* loginRecord;
+  // iterate over given users
   for (int i = 0; i < finger->usersSize; i++) {
-    printf("The %dth user is %s\n", i+1, finger->users[i]);
+    // retrieve the first login record
+    loginRecord = getutent();
+    // iterate over login records
+    while(loginRecord != NULL) {
+      // use strncpy to add termination character
+      strncpy(aux, loginRecord->ut_user, UT_NAMESIZE);
+      aux[UT_NAMESIZE-1] = '\0';
+      // print information only of given users
+      if (strcmp(aux, finger->users[i]) == 0) {
+        printf("username: %s\n", aux);
+        printf("type: %hi\n", loginRecord->ut_type);
+        strncpy(aux, loginRecord->ut_id, 4);
+        aux[4] = '\0';
+        printf("terminal name suffix: %s\n", aux);
+        printf("device name of tty: %s\n\n", loginRecord->ut_line);
+      }
+
+      // retrieve the next login record
+      loginRecord = getutent();
+    }
   }
 
   // release the allocated memory
