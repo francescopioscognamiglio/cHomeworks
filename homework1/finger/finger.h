@@ -3,6 +3,7 @@
 #include <string.h> // included to use string functions
 #include <stdbool.h> // included to use the bool data type
 #include <unistd.h>
+#include <sys/stat.h>
 #include <pwd.h>
 #include <time.h>
 #include "parser.h"

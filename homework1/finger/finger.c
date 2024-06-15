@@ -38,18 +38,31 @@ int main(int argc, char* argv[]) {
       if (strcmp(aux, finger->users[i]) == 0) {
         struct passwd* realUserPwd = getpwuid(getuid());
 
-        char loginTime[25];
-        time_t time = loginRecord->ut_tv.tv_sec;
-        struct tm* timeinfo = localtime(&time);
+        char loginTime[20], loginTimeLong[25];
+        time_t ltime = loginRecord->ut_tv.tv_sec;
+        struct tm* timeinfo = localtime(&ltime);
 
         char* timeFormat = "%b %d %R";
         strftime(loginTime, sizeof(loginTime), timeFormat, timeinfo);
 
+        char* timeFormatLong = "%a %b %d %R (%Z)";
+        strftime(loginTimeLong, sizeof(loginTimeLong), timeFormatLong, timeinfo);
+
+        struct stat ttyStat;
+        char terminalName[UT_LINESIZE+6];
+        strncpy(terminalName, "/dev/", UT_LINESIZE);
+        strncat(terminalName, loginRecord->ut_line, UT_LINESIZE);
+        terminalName[UT_LINESIZE+5] = '\0';
+        stat(terminalName, &ttyStat);
+        time_t now;
+        time(&now);
+        double idleTime = now - ttyStat.st_atime;
+
         printf("Printing information on single line ...\n");
         printf("Login\tName\tTty\tIdle\tLogin Time\tOffice\tOffice Phone\n");
-        printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", finger->users[i],
+        printf("%s\t%s\t%s\t%d:%d\t%s\t%s\t%s\n", finger->users[i],
             realUserPwd->pw_name, loginRecord->ut_line,
-            "FIXME", loginTime,
+            (int) idleTime / 3600, (int) (idleTime / 60) % 60, loginTime,
             "FIXME", "FIXME");
 
 
@@ -59,16 +72,13 @@ int main(int argc, char* argv[]) {
 
         struct passwd* currentUserPwd = getpwnam(finger->users[i]);
 
-        char* timeFormatLong = "%a %b %d %R (%Z)";
-        strftime(loginTime, sizeof(loginTime), timeFormatLong, timeinfo);
-
         printf("\n\nPrinting information on multiple lines ...\n");
         printf("Login: %s\t\t", finger->users[i]);
         printf("Name: %s\n", realUserPwd->pw_name);
         printf("Directory: %s\t\t", currentUserPwd->pw_dir);
         printf("Shell: %s\n", currentUserPwd->pw_shell);
-        printf("On since %s on %s from %s\n", loginTime, loginRecord->ut_line, terminalSuffix);
-        printf("\t%s idle\n", "FIXME");
+        printf("On since %s on %s from %s\n", loginTimeLong, loginRecord->ut_line, terminalSuffix);
+        printf("\t%d hours %d minutes idle\n", (int) idleTime / 3600, (int) (idleTime / 60) % 60);
         printf("%s\n", "FIXME No mail.");
         printf("%s\n", "FIXME No Plan.");
       }
