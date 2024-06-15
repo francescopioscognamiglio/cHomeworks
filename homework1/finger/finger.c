@@ -36,12 +36,41 @@ int main(int argc, char* argv[]) {
       aux[UT_NAMESIZE-1] = '\0';
       // print information only of given users
       if (strcmp(aux, finger->users[i]) == 0) {
-        printf("username: %s\n", aux);
-        printf("type: %hi\n", loginRecord->ut_type);
-        strncpy(aux, loginRecord->ut_id, 4);
-        aux[4] = '\0';
-        printf("terminal name suffix: %s\n", aux);
-        printf("device name of tty: %s\n\n", loginRecord->ut_line);
+        struct passwd* realUserPwd = getpwuid(getuid());
+
+        char loginTime[25];
+        time_t time = loginRecord->ut_tv.tv_sec;
+        struct tm* timeinfo = localtime(&time);
+
+        char* timeFormat = "%b %d %R";
+        strftime(loginTime, sizeof(loginTime), timeFormat, timeinfo);
+
+        printf("Printing information on single line ...\n");
+        printf("Login\tName\tTty\tIdle\tLogin Time\tOffice\tOffice Phone\n");
+        printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", finger->users[i],
+            realUserPwd->pw_name, loginRecord->ut_line,
+            "FIXME", loginTime,
+            "FIXME", "FIXME");
+
+
+        char terminalSuffix[5];
+        strncpy(terminalSuffix, loginRecord->ut_id, 4);
+        terminalSuffix[4] = '\0';
+
+        struct passwd* currentUserPwd = getpwnam(finger->users[i]);
+
+        char* timeFormatLong = "%a %b %d %R (%Z)";
+        strftime(loginTime, sizeof(loginTime), timeFormatLong, timeinfo);
+
+        printf("\n\nPrinting information on multiple lines ...\n");
+        printf("Login: %s\t\t", finger->users[i]);
+        printf("Name: %s\n", realUserPwd->pw_name);
+        printf("Directory: %s\t\t", currentUserPwd->pw_dir);
+        printf("Shell: %s\n", currentUserPwd->pw_shell);
+        printf("On since %s on %s from %s\n", loginTime, loginRecord->ut_line, terminalSuffix);
+        printf("\t%s idle\n", "FIXME");
+        printf("%s\n", "FIXME No mail.");
+        printf("%s\n", "FIXME No Plan.");
       }
 
       // retrieve the next login record
