@@ -1,7 +1,3 @@
-#include <stdio.h> // included to use printing functions
-#include <stdlib.h> // included to use the exit status
-#include <string.h> // included to use string functions
-#include <stdbool.h> // included to use the bool data type
 #include "parser.h"
 
 int parseOptions(int argc, char* argv[], finger_t* finger) {
@@ -80,18 +76,18 @@ int parseUsers(int argc, char* argv[], finger_t* finger) {
   return EXIT_SUCCESS;
 }
 
-int addInitialUser(char* user, finger_t* finger) {
+int addInitialUser(char* userName, finger_t* finger) {
   finger->usersSize = 0;
-  return addUser(user, finger);
+  return addUser(userName, finger);
 }
 
-int addUser(char* user, finger_t* finger) {
+int addUser(char* userName, finger_t* finger) {
   if (finger->usersSize == 0) {
     // allocate memory for the first user
-    finger->users = (char**) calloc(1, sizeof(char*));
+    finger->users = (user_t**) malloc(sizeof(user_t*));
   } else if (finger->usersSize > 0) {
     // re-allocate memory for new users
-    finger->users = (char**) realloc(finger->users, (finger->usersSize + 1) * sizeof(char*));
+    finger->users = (user_t**) realloc(finger->users, (finger->usersSize+1) * sizeof(user_t*));
   }
 
   if (finger->users == NULL) {
@@ -100,13 +96,113 @@ int addUser(char* user, finger_t* finger) {
   }
 
   // allocate memory for user information
-  finger->users[finger->usersSize] = (char*) calloc(UT_NAMESIZE, sizeof(char));
+  finger->users[finger->usersSize] = (user_t*) malloc(sizeof(user_t));
   if (finger->users[finger->usersSize] == NULL) {
     printf("There was an error allocating the memory.\n");
     return EXIT_FAILURE;
   }
 
-  strncpy(finger->users[finger->usersSize], user, UT_NAMESIZE);
+
+  char aux[UT_NAMESIZE];
+  // point the beginning of the utmp file
+  setutent();
+  // retrieve the first login record from the utmp file
+  struct utmp* loginRecord = getutent();
+  // iterate over login records
+  bool userFound = false;
+  while(loginRecord != NULL) {
+    // use strncpy to add termination character
+    strncpy(aux, loginRecord->ut_user, UT_NAMESIZE);
+    aux[UT_NAMESIZE-1] = '\0';
+    // print information only of given users
+    if (strcmp(aux, userName) == 0) {
+      userFound = true;
+
+      struct passwd* realUserPwd = getpwuid(getuid());
+
+      char terminalSuffix[5];
+      strncpy(terminalSuffix, loginRecord->ut_id, 4);
+      terminalSuffix[4] = '\0';
+
+      struct passwd* currentUserPwd = getpwnam(userName);
+
+      struct stat ttyStat;
+      char terminalName[UT_LINESIZE+6];
+      strncpy(terminalName, "/dev/", UT_LINESIZE);
+      strncat(terminalName, loginRecord->ut_line, UT_LINESIZE);
+      terminalName[UT_LINESIZE+5] = '\0';
+      stat(terminalName, &ttyStat);
+      time_t now;
+      time(&now);
+      double idleTime = now - ttyStat.st_atime;
+
+      finger->users[finger->usersSize]->loginName = (char*) calloc(UT_NAMESIZE, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->loginName, userName, UT_NAMESIZE);
+
+      finger->users[finger->usersSize]->realName = (char*) calloc(UT_NAMESIZE, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->realName, realUserPwd->pw_name, UT_NAMESIZE);
+
+      finger->users[finger->usersSize]->terminalName = (char*) calloc(UT_LINESIZE, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->terminalName, loginRecord->ut_line, UT_LINESIZE);
+
+      finger->users[finger->usersSize]->idleTimeHours = (int) idleTime / 3600;
+      finger->users[finger->usersSize]->idleTimeMinutes = (int) (idleTime / 60) % 60;
+
+      finger->users[finger->usersSize]->loginDate = loginRecord->ut_tv.tv_sec;
+
+      // FIXME: manage office location
+      finger->users[finger->usersSize]->officeLocation = (char*) calloc(20, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->officeLocation, "FIXME", 20);
+
+      // FIXME: manage office phone number
+      finger->users[finger->usersSize]->officePhoneNumber = (char*) calloc(20, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->officePhoneNumber, "FIXME", 20);
+
+      // FIXME: is there a limit of chars for the home directory?
+      finger->users[finger->usersSize]->homeDirectory = (char*) calloc(200, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->homeDirectory, currentUserPwd->pw_dir, 200);
+
+      // FIXME: is there a limit of chars for the login shell?
+      finger->users[finger->usersSize]->loginShell = (char*) calloc(200, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->loginShell, currentUserPwd->pw_shell, 200);
+
+      finger->users[finger->usersSize]->terminalSuffix = (char*) calloc(5, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->terminalSuffix, loginRecord->ut_id, 4);
+      terminalSuffix[4] = '\0'; // manually set the string termination character
+
+      // FIXME: manage mail file
+      finger->users[finger->usersSize]->mail = (char*) calloc(20, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->mail, "FIXME", 20);
+
+      // FIXME: manage plan file
+      finger->users[finger->usersSize]->plan = (char*) calloc(20, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->plan, "FIXME", 20);
+
+      // FIXME: manage project file
+      finger->users[finger->usersSize]->project = (char*) calloc(20, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->project, "FIXME", 20);
+
+      // FIXME: manage pgpkey file
+      finger->users[finger->usersSize]->pgpkey = (char*) calloc(20, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->pgpkey, "FIXME", 20);
+
+      // FIXME: manage forward file
+      finger->users[finger->usersSize]->forward = (char*) calloc(20, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->forward, "FIXME", 20);
+    }
+
+    // retrieve the next login record
+    loginRecord = getutent();
+  }
+
+  // close the utmp file
+  endutent();
+
+  if (userFound == false) {
+    printf("finger: %s: no such user.\n", userName);
+    return EXIT_SUCCESS;
+  }
+
   finger->usersSize++;
   return EXIT_SUCCESS;
 }
