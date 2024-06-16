@@ -4,6 +4,7 @@ typedef struct {
   bool isMultiLine;
   bool useRealName;
   bool showSpecialFiles;
+  bool foundStyle;
 } format_t;
 
 typedef struct {

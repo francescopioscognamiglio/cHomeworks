@@ -1,3 +1,11 @@
+#include <stdio.h> // included to use printing functions
+#include <stdlib.h> // included to use the exit states
+#include <string.h> // included to use string functions
+#include <unistd.h> // included to use the username and the user identifier
+#include <sys/stat.h> // included to use the stat function
+#include <utmp.h> // included to use the utmp file containing login records
+#include <pwd.h> // included to use the password file
+#include <time.h> // included to use the time functions
 #include "structure.h"
 #include "parser.h"
 
@@ -6,10 +14,10 @@ int parseOptions(int argc, char* argv[], finger_t* finger) {
   finger->format->isMultiLine = false;
   finger->format->useRealName = true;
   finger->format->showSpecialFiles = true;
+  finger->format->foundStyle = false;
 
   // check the provided arguments
   // skip the first argument that is the program name
-  bool foundStyle = false;
   for (int i = 1; i < argc; i++) {
 
     // check if the argument is an option
@@ -21,18 +29,18 @@ int parseOptions(int argc, char* argv[], finger_t* finger) {
         if (argv[i][j] == 'l') {
           finger->format->isMultiLine = true;
           found = true;
-          foundStyle = true;
+          finger->format->foundStyle = true;
         }
         if (argv[i][j] == 'm') {
           finger->format->useRealName = false;
           found = true;
         }
         if (argv[i][j] == 's') {
-          if (foundStyle == false) {
+          if (finger->format->foundStyle == false) {
             finger->format->isMultiLine = false;
           }
           found = true;
-          foundStyle = true;
+          finger->format->foundStyle = true;
         }
         if (argv[i][j] == 'p') {
           finger->format->showSpecialFiles = false;
@@ -47,14 +55,6 @@ int parseOptions(int argc, char* argv[], finger_t* finger) {
     }
   }
 
-  if (foundStyle == false) {
-    if (finger->usersSize > 0) {
-      finger->format->isMultiLine = true;
-    } else {
-      finger->format->isMultiLine = false;
-    }
-  }
-
   return EXIT_SUCCESS;
 }
 
@@ -62,15 +62,32 @@ int parseUsers(int argc, char* argv[], finger_t* finger) {
   int status = EXIT_SUCCESS;
   finger->usersSize = 0;
 
+  bool givenOneUser = false;
   // check the provided arguments
   // skip the first argument that is the program name
   for (int i = 1; i < argc; i++) {
     // check if the argument is a user
     if (argv[i][0] != '-') {
       status = addUser(argv[i], finger);
+      givenOneUser = true;
       if (status == EXIT_FAILURE) {
         return status;
       }
+    }
+  }
+
+  // if no user is specified as argument
+  if (givenOneUser == false) {
+    // retrieve the currently logged user
+    char* currentUser = getlogin();
+    addInitialUser(currentUser, finger);
+  }
+
+  if (finger->format->foundStyle == false) {
+    if (finger->usersSize > 0) {
+      finger->format->isMultiLine = true;
+    } else {
+      finger->format->isMultiLine = false;
     }
   }
 
@@ -103,29 +120,32 @@ int addUser(char* userName, finger_t* finger) {
     return EXIT_FAILURE;
   }
 
+  // retrieve user info
+  struct passwd* realUserPwd = getpwuid(getuid());
 
-  char aux[UT_NAMESIZE];
+  char realUserCopy[UT_NAMESIZE];
+  strncpy(realUserCopy, realUserPwd->pw_name, UT_NAMESIZE);
+  realUserCopy[UT_NAMESIZE-1] = '\0'; // add string termination character
   // point the beginning of the utmp file
   setutent();
   // retrieve the first login record from the utmp file
   struct utmp* loginRecord = getutent();
   // iterate over login records
   bool userFound = false;
-  while(loginRecord != NULL) {
-    // use strncpy to add termination character
-    strncpy(aux, loginRecord->ut_user, UT_NAMESIZE);
-    aux[UT_NAMESIZE-1] = '\0';
+  while (loginRecord != NULL) {
+    char loginUserCopy[UT_NAMESIZE];
+    strncpy(loginUserCopy, loginRecord->ut_user, UT_NAMESIZE);
+    loginUserCopy[UT_NAMESIZE-1] = '\0'; // add string termination character
     // print information only of given users
-    if (strcmp(aux, userName) == 0) {
+    if ((strcasecmp(loginUserCopy, userName) == 0) &&
+        (finger->format->useRealName == false || strcasecmp(realUserCopy, userName) == 0)) {
       userFound = true;
 
-      struct passwd* realUserPwd = getpwuid(getuid());
+      struct passwd* userPwd = getpwnam(loginUserCopy);
 
       char terminalSuffix[5];
       strncpy(terminalSuffix, loginRecord->ut_id, 4);
       terminalSuffix[4] = '\0';
-
-      struct passwd* currentUserPwd = getpwnam(userName);
 
       struct stat ttyStat;
       char terminalName[UT_LINESIZE+6];
@@ -138,10 +158,10 @@ int addUser(char* userName, finger_t* finger) {
       double idleTime = now - ttyStat.st_atime;
 
       finger->users[finger->usersSize]->loginName = (char*) calloc(UT_NAMESIZE, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->loginName, userName, UT_NAMESIZE);
+      strncpy(finger->users[finger->usersSize]->loginName, loginUserCopy, UT_NAMESIZE);
 
       finger->users[finger->usersSize]->realName = (char*) calloc(UT_NAMESIZE, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->realName, realUserPwd->pw_name, UT_NAMESIZE);
+      strncpy(finger->users[finger->usersSize]->realName, realUserCopy, UT_NAMESIZE);
 
       finger->users[finger->usersSize]->terminalName = (char*) calloc(UT_LINESIZE, sizeof(char));
       strncpy(finger->users[finger->usersSize]->terminalName, loginRecord->ut_line, UT_LINESIZE);
@@ -160,12 +180,12 @@ int addUser(char* userName, finger_t* finger) {
       strncpy(finger->users[finger->usersSize]->officePhoneNumber, "FIXME", 20);
 
       // FIXME: is there a limit of chars for the home directory?
-      finger->users[finger->usersSize]->homeDirectory = (char*) calloc(200, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->homeDirectory, currentUserPwd->pw_dir, 200);
+      finger->users[finger->usersSize]->homeDirectory = (char*) calloc(100, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->homeDirectory, userPwd->pw_dir, 100);
 
       // FIXME: is there a limit of chars for the login shell?
-      finger->users[finger->usersSize]->loginShell = (char*) calloc(200, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->loginShell, currentUserPwd->pw_shell, 200);
+      finger->users[finger->usersSize]->loginShell = (char*) calloc(100, sizeof(char));
+      strncpy(finger->users[finger->usersSize]->loginShell, userPwd->pw_shell, 100);
 
       finger->users[finger->usersSize]->terminalSuffix = (char*) calloc(5, sizeof(char));
       strncpy(finger->users[finger->usersSize]->terminalSuffix, loginRecord->ut_id, 4);

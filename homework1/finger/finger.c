@@ -1,3 +1,5 @@
+#include <stdio.h> // included to use printing functions
+#include <stdlib.h> // included to use the exit states
 #include "structure.h"
 #include "parser.h"
 #include "printer.h"
@@ -8,7 +10,7 @@ int main(int argc, char* argv[]) {
   int status = EXIT_SUCCESS;
 
   // prepare finger structure
-  finger_t* finger = malloc(sizeof(finger_t));
+  finger_t* finger = (finger_t*) malloc(sizeof(finger_t));
   if (finger == NULL) {
     printf("There was an error allocating the memory.\n");
     return EXIT_FAILURE;
@@ -34,15 +36,10 @@ int build(int argc, char* argv[], finger_t* finger) {
   int status = EXIT_SUCCESS;
 
   // allocate the necessary memory (but first clean it)
-  finger->format = malloc(sizeof(format_t));
+  finger->format = (format_t*) malloc(sizeof(format_t));
   if (finger->format == NULL) {
     printf("There was an error allocating the memory.\n");
     return EXIT_FAILURE;
-  }
-
-  status = parseUsers(argc, argv, finger);
-  if (status == EXIT_FAILURE) {
-    return status;
   }
 
   status = parseOptions(argc, argv, finger);
@@ -50,11 +47,9 @@ int build(int argc, char* argv[], finger_t* finger) {
     return status;
   }
 
-  // if no user is specified as argument
-  if (finger->usersSize <= 0) {
-    // retrieve the currently logged user
-    char* currentUser = getlogin();
-    addInitialUser(currentUser, finger);
+  status = parseUsers(argc, argv, finger);
+  if (status == EXIT_FAILURE) {
+    return status;
   }
 
   return status;

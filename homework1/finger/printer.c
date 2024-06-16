@@ -1,3 +1,5 @@
+#include <stdio.h> // included to use printing functions
+#include <time.h> // included to use the time functions
 #include "structure.h"
 #include "printer.h"
 
@@ -54,6 +56,15 @@ int printMultipleLines(user_t* user, format_t* format) {
   printf("\t%d hours %d minutes idle\n",
       user->idleTimeHours,
       user->idleTimeMinutes);
+
+  // FIXME: print mail status
   printf("%s\n", user->mail);
-  printf("%s\n", user->plan);
+
+  // FIXME: print:
+  // - .plan
+  // - .project
+  // - .pgpkey
+  if (format->showSpecialFiles == true) {
+    printf("%s\n", user->plan);
+  }
 }
