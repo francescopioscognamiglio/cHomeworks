@@ -1,3 +1,4 @@
+#include "structure.h"
 #include "parser.h"
 
 int parseOptions(int argc, char* argv[], finger_t* finger) {
