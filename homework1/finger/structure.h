@@ -8,13 +8,18 @@ typedef struct {
 } format_t;
 
 typedef struct {
+  int hours;
+  int minutes;
+  int seconds;
+} idletime_t;
+
+typedef struct {
   char* loginName;
   char* realName;
   char* terminalName;
   char* terminalSuffix;
   //char* writeStatus;
-  int idleTimeHours;
-  int idleTimeMinutes;
+  idletime_t* idleTime;
   int loginDate;
   char* officeLocation;
   char* officePhone;

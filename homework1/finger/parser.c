@@ -153,8 +153,6 @@ int addUser(char* userName, finger_t* finger) {
       strncat(terminalName, loginRecord->ut_line, UT_LINESIZE);
       terminalName[UT_LINESIZE+5] = '\0';
       stat(terminalName, &ttyStat);
-      time_t now;
-      time(&now);
 
       finger->users[finger->usersSize]->loginName = (char*) calloc(UT_NAMESIZE, sizeof(char));
       strncpy(finger->users[finger->usersSize]->loginName, loginUserCopy, UT_NAMESIZE);
@@ -165,16 +163,7 @@ int addUser(char* userName, finger_t* finger) {
       finger->users[finger->usersSize]->terminalName = (char*) calloc(UT_LINESIZE, sizeof(char));
       strncpy(finger->users[finger->usersSize]->terminalName, loginRecord->ut_line, UT_LINESIZE);
 
-      if (ttyStat.st_atime > 0) {
-        long idleTime = now - ttyStat.st_atime;
-        if (idleTime > 0) {
-          int idleTimeHours = idleTime / 3600;
-          int idleTimeAllMinutes = idleTime / 60;
-          int idleTimeMinutes = idleTimeAllMinutes % 60;
-          finger->users[finger->usersSize]->idleTimeHours = idleTimeHours;
-          finger->users[finger->usersSize]->idleTimeMinutes = idleTimeMinutes;
-        }
-      }
+      retrieveIdleTime(finger->users[finger->usersSize], ttyStat.st_atime);
 
       finger->users[finger->usersSize]->loginDate = loginRecord->ut_tv.tv_sec;
 
@@ -230,7 +219,25 @@ int addUser(char* userName, finger_t* finger) {
   return EXIT_SUCCESS;
 }
 
-int retrieveGecos(user_t* user, struct passwd* userPwd) {
+void retrieveIdleTime(user_t* user, long accessTime) {
+  time_t now;
+  time(&now);
+  if (time > 0) {
+    long idleTime = now - accessTime;
+    if (idleTime > 0) {
+      int idleTimeHours = idleTime / 3600;
+      int idleTimeAllMinutes = idleTime / 60;
+      int idleTimeMinutes = idleTimeAllMinutes % 60;
+      int idleTimeSeconds = idleTime % 60;
+      user->idleTime = (idletime_t*) malloc(sizeof(idletime_t));
+      user->idleTime->hours = idleTimeHours;
+      user->idleTime->minutes = idleTimeMinutes;
+      user->idleTime->seconds = idleTimeSeconds;
+    }
+  }
+}
+
+void retrieveGecos(user_t* user, struct passwd* userPwd) {
   // The GECOS information can be used to retrieve:
   // - the office location
   // - the office phone

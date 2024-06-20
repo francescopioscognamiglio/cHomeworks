@@ -27,12 +27,11 @@ int printSingleLine(user_t* user, format_t* format) {
 
   printf("Printing information on single line ...\n");
   printf("Login\tName\tTty\tIdle\tLogin Time\tOffice\tOffice Phone\n");
-  printf("%s\t%s\t%s\t%d:%d\t%s\t%s\t%s\n",
+  printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
       user->loginName,
       user->realName,
       user->terminalName,
-      user->idleTimeHours,
-      user->idleTimeMinutes,
+      formatIdleTime(user->idleTime),
       loginTimeShort,
       user->officeLocation,
       formatPhone(user->officePhone));
@@ -56,9 +55,7 @@ int printMultipleLines(user_t* user, format_t* format) {
   printf("Home Phone: %s\n", formatPhone(user->homePhone));
   printf("On since %s on %s from %s\n", loginTimeLong,
       user->terminalName, user->terminalSuffix);
-  printf("\t%d hours %d minutes idle\n",
-      user->idleTimeHours,
-      user->idleTimeMinutes);
+  printIdleTime(user->idleTime);
 
   // FIXME: print mail status
   printf("%s\n", user->mail);
@@ -118,4 +115,27 @@ char* formatPhone(char* phone) {
   }
 
   return formattedPhone;
+}
+
+char* formatIdleTime(idletime_t* idleTime) {
+  char* formattedIdleTime = calloc(7, sizeof(char));
+  if (idleTime->hours != 0) {
+    sprintf(formattedIdleTime, "%d:%d", idleTime->hours, idleTime->minutes);
+  } else {
+    sprintf(formattedIdleTime, "%d:%d", idleTime->minutes, idleTime->seconds);
+  }
+  formattedIdleTime[6] = '\0';
+  return formattedIdleTime;
+}
+
+void printIdleTime(idletime_t* idleTime) {
+  if (idleTime->hours != 0) {
+    printf("\t%d hours %d minutes idle\n",
+      idleTime->hours,
+      idleTime->minutes);
+  } else {
+    printf("\t%d minutes %d seconds idle\n",
+      idleTime->minutes,
+      idleTime->seconds);
+  }
 }
