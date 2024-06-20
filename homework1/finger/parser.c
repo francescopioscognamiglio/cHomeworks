@@ -113,13 +113,6 @@ int addUser(char* userName, finger_t* finger) {
     return EXIT_FAILURE;
   }
 
-  // allocate memory for user information
-  finger->users[finger->usersSize] = (user_t*) malloc(sizeof(user_t));
-  if (finger->users[finger->usersSize] == NULL) {
-    printf("There was an error allocating the memory.\n");
-    return EXIT_FAILURE;
-  }
-
   // retrieve user info
   struct passwd* realUserPwd = getpwuid(getuid());
 
@@ -141,6 +134,13 @@ int addUser(char* userName, finger_t* finger) {
         (finger->format->useRealName == false || strcasecmp(realUserCopy, userName) == 0)) {
       userFound = true;
 
+      // allocate memory for user information
+      finger->users[finger->usersSize] = (user_t*) malloc(sizeof(user_t));
+      if (finger->users[finger->usersSize] == NULL) {
+        printf("There was an error allocating the memory.\n");
+        return EXIT_FAILURE;
+      }
+
       struct passwd* userPwd = getpwnam(loginUserCopy);
 
       char terminalSuffix[5];
@@ -155,7 +155,6 @@ int addUser(char* userName, finger_t* finger) {
       stat(terminalName, &ttyStat);
       time_t now;
       time(&now);
-      double idleTime = now - ttyStat.st_atime;
 
       finger->users[finger->usersSize]->loginName = (char*) calloc(UT_NAMESIZE, sizeof(char));
       strncpy(finger->users[finger->usersSize]->loginName, loginUserCopy, UT_NAMESIZE);
@@ -166,8 +165,16 @@ int addUser(char* userName, finger_t* finger) {
       finger->users[finger->usersSize]->terminalName = (char*) calloc(UT_LINESIZE, sizeof(char));
       strncpy(finger->users[finger->usersSize]->terminalName, loginRecord->ut_line, UT_LINESIZE);
 
-      finger->users[finger->usersSize]->idleTimeHours = (int) idleTime / 3600;
-      finger->users[finger->usersSize]->idleTimeMinutes = (int) (idleTime / 60) % 60;
+      if (ttyStat.st_atime > 0) {
+        long idleTime = now - ttyStat.st_atime;
+        if (idleTime > 0) {
+          int idleTimeHours = idleTime / 3600;
+          int idleTimeAllMinutes = idleTime / 60;
+          int idleTimeMinutes = idleTimeAllMinutes % 60;
+          finger->users[finger->usersSize]->idleTimeHours = idleTimeHours;
+          finger->users[finger->usersSize]->idleTimeMinutes = idleTimeMinutes;
+        }
+      }
 
       finger->users[finger->usersSize]->loginDate = loginRecord->ut_tv.tv_sec;
 
@@ -204,6 +211,8 @@ int addUser(char* userName, finger_t* finger) {
       // FIXME: manage forward file
       finger->users[finger->usersSize]->forward = (char*) calloc(20, sizeof(char));
       strncpy(finger->users[finger->usersSize]->forward, "FIXME", 20);
+
+      finger->usersSize++;
     }
 
     // retrieve the next login record
@@ -218,7 +227,6 @@ int addUser(char* userName, finger_t* finger) {
     return EXIT_SUCCESS;
   }
 
-  finger->usersSize++;
   return EXIT_SUCCESS;
 }
 
