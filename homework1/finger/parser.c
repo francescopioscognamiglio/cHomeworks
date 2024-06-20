@@ -1,5 +1,5 @@
 #include <stdio.h> // included to use printing functions
-#include <stdlib.h> // included to use the exit states
+#include <stdlib.h> // included to use the exit states and memory allocation functions
 #include <string.h> // included to use string functions
 #include <unistd.h> // included to use the username and the user identifier
 #include <sys/stat.h> // included to use the stat function
@@ -171,14 +171,6 @@ int addUser(char* userName, finger_t* finger) {
 
       finger->users[finger->usersSize]->loginDate = loginRecord->ut_tv.tv_sec;
 
-      // FIXME: manage office location
-      finger->users[finger->usersSize]->officeLocation = (char*) calloc(20, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->officeLocation, "FIXME", 20);
-
-      // FIXME: manage office phone number
-      finger->users[finger->usersSize]->officePhoneNumber = (char*) calloc(20, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->officePhoneNumber, "FIXME", 20);
-
       // FIXME: is there a limit of chars for the home directory?
       finger->users[finger->usersSize]->homeDirectory = (char*) calloc(100, sizeof(char));
       strncpy(finger->users[finger->usersSize]->homeDirectory, userPwd->pw_dir, 100);
@@ -190,6 +182,8 @@ int addUser(char* userName, finger_t* finger) {
       finger->users[finger->usersSize]->terminalSuffix = (char*) calloc(5, sizeof(char));
       strncpy(finger->users[finger->usersSize]->terminalSuffix, loginRecord->ut_id, 4);
       terminalSuffix[4] = '\0'; // manually set the string termination character
+
+      retrieveGecos(finger->users[finger->usersSize], userPwd);
 
       // FIXME: manage mail file
       finger->users[finger->usersSize]->mail = (char*) calloc(20, sizeof(char));
@@ -226,4 +220,44 @@ int addUser(char* userName, finger_t* finger) {
 
   finger->usersSize++;
   return EXIT_SUCCESS;
+}
+
+int retrieveGecos(user_t* user, struct passwd* userPwd) {
+  // The GECOS information can be used to retrieve:
+  // - the office location
+  // - the office phone
+  // - the home phone
+  user->officeLocation = NULL;
+  user->officePhone = NULL;
+  user->homePhone = NULL;
+  int start = 0, offset = 0, i = -1;
+  int step = 0;
+  do {
+    i++;
+    if (userPwd->pw_gecos[i] != ',' && userPwd->pw_gecos[i] != '\0') {
+      offset++;
+    } else {
+      char* gecosSingleParameter = (char*) calloc(offset+1, sizeof(char));
+      memcpy(gecosSingleParameter, &userPwd->pw_gecos[start], offset);
+      gecosSingleParameter[offset+1] = '\0';
+      switch (step) {
+        case 1:
+          user->officeLocation = (char*) calloc(20, sizeof(char));
+          strncpy(user->officeLocation, gecosSingleParameter, 20);
+          break;
+        case 2:
+          user->officePhone = (char*) calloc(20, sizeof(char));
+          strncpy(user->officePhone, gecosSingleParameter, 20);
+          break;
+        case 3:
+          user->homePhone = (char*) calloc(20, sizeof(char));
+          strncpy(user->homePhone, gecosSingleParameter, 20);
+          break;
+      }
+      free(gecosSingleParameter);
+      step++;
+      start = i+1;
+      offset = 0;
+    }
+  } while (userPwd->pw_gecos[i] != '\0');
 }

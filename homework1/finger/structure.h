@@ -17,7 +17,8 @@ typedef struct {
   int idleTimeMinutes;
   int loginDate;
   char* officeLocation;
-  char* officePhoneNumber;
+  char* officePhone;
+  char* homePhone;
   char* homeDirectory;
   char* homePhoneNumber;
   char* loginShell;

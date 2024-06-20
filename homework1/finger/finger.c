@@ -1,5 +1,5 @@
 #include <stdio.h> // included to use printing functions
-#include <stdlib.h> // included to use the exit states
+#include <stdlib.h> // included to use the exit states and memory allocation functions
 #include "structure.h"
 #include "parser.h"
 #include "printer.h"
