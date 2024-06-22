@@ -59,7 +59,6 @@ int parseOptions(int argc, char* argv[], finger_t* finger) {
 }
 
 int parseUsers(int argc, char* argv[], finger_t* finger) {
-  int status = EXIT_SUCCESS;
   finger->usersSize = 0;
 
   bool givenOneUser = false;
@@ -68,10 +67,9 @@ int parseUsers(int argc, char* argv[], finger_t* finger) {
   for (int i = 1; i < argc; i++) {
     // check if the argument is a user
     if (argv[i][0] != '-') {
-      status = addUser(argv[i], finger);
       givenOneUser = true;
-      if (status == EXIT_FAILURE) {
-        return status;
+      if (addUser(argv[i], finger) == EXIT_FAILURE) {
+        return EXIT_FAILURE;
       }
     }
   }
@@ -147,12 +145,12 @@ int addUser(char* userName, finger_t* finger) {
       strncpy(terminalSuffix, loginRecord->ut_id, 4);
       terminalSuffix[4] = '\0';
 
-      struct stat ttyStat;
+      struct stat* ttyStat = malloc(sizeof(struct stat));
       char terminalName[UT_LINESIZE+6];
       strncpy(terminalName, "/dev/", UT_LINESIZE);
       strncat(terminalName, loginRecord->ut_line, UT_LINESIZE);
       terminalName[UT_LINESIZE+5] = '\0';
-      stat(terminalName, &ttyStat);
+      stat(terminalName, ttyStat);
 
       finger->users[finger->usersSize]->loginName = (char*) calloc(UT_NAMESIZE, sizeof(char));
       strncpy(finger->users[finger->usersSize]->loginName, loginUserCopy, UT_NAMESIZE);
@@ -163,7 +161,7 @@ int addUser(char* userName, finger_t* finger) {
       finger->users[finger->usersSize]->terminalName = (char*) calloc(UT_LINESIZE, sizeof(char));
       strncpy(finger->users[finger->usersSize]->terminalName, loginRecord->ut_line, UT_LINESIZE);
 
-      retrieveIdleTime(finger->users[finger->usersSize], ttyStat.st_atime);
+      retrieveIdleTime(finger->users[finger->usersSize], ttyStat->st_atime);
 
       finger->users[finger->usersSize]->loginDate = loginRecord->ut_tv.tv_sec;
 
@@ -180,26 +178,6 @@ int addUser(char* userName, finger_t* finger) {
       terminalSuffix[4] = '\0'; // manually set the string termination character
 
       retrieveGecos(finger->users[finger->usersSize], userPwd);
-
-      // FIXME: manage mail file
-      finger->users[finger->usersSize]->mail = (char*) calloc(20, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->mail, "FIXME", 20);
-
-      // FIXME: manage plan file
-      finger->users[finger->usersSize]->plan = (char*) calloc(20, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->plan, "FIXME", 20);
-
-      // FIXME: manage project file
-      finger->users[finger->usersSize]->project = (char*) calloc(20, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->project, "FIXME", 20);
-
-      // FIXME: manage pgpkey file
-      finger->users[finger->usersSize]->pgpkey = (char*) calloc(20, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->pgpkey, "FIXME", 20);
-
-      // FIXME: manage forward file
-      finger->users[finger->usersSize]->forward = (char*) calloc(20, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->forward, "FIXME", 20);
 
       finger->usersSize++;
     }

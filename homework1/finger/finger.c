@@ -6,9 +6,6 @@
 #include "finger.h"
 
 int main(int argc, char* argv[]) {
-
-  int status = EXIT_SUCCESS;
-
   // prepare finger structure
   finger_t* finger = (finger_t*) malloc(sizeof(finger_t));
   if (finger == NULL) {
@@ -17,24 +14,24 @@ int main(int argc, char* argv[]) {
   }
 
   // populate finger structure
-  status = build(argc, argv, finger);
-  if (status == EXIT_FAILURE) {
+  if (build(argc, argv, finger) == EXIT_FAILURE) {
     printHelp();
-    return status;
+    return EXIT_FAILURE;
   }
 
   // print finger structure
-  print(finger);
+  if (print(finger) == EXIT_FAILURE) {
+    printHelp();
+    return EXIT_FAILURE;
+  }
 
   // release the allocated memory
   release(finger);
 
-  return status;
+  return EXIT_SUCCESS;
 }
 
 int build(int argc, char* argv[], finger_t* finger) {
-  int status = EXIT_SUCCESS;
-
   // allocate the necessary memory (but first clean it)
   finger->format = (format_t*) malloc(sizeof(format_t));
   if (finger->format == NULL) {
@@ -42,17 +39,15 @@ int build(int argc, char* argv[], finger_t* finger) {
     return EXIT_FAILURE;
   }
 
-  status = parseOptions(argc, argv, finger);
-  if (status == EXIT_FAILURE) {
-    return status;
+  if (parseOptions(argc, argv, finger) == EXIT_FAILURE) {
+    return EXIT_FAILURE;
   }
 
-  status = parseUsers(argc, argv, finger);
-  if (status == EXIT_FAILURE) {
-    return status;
+  if (parseUsers(argc, argv, finger) == EXIT_FAILURE) {
+    return EXIT_FAILURE;
   }
 
-  return status;
+  return EXIT_SUCCESS;
 }
 
 int release(finger_t* finger) {
