@@ -27,11 +27,6 @@ typedef struct {
   char* homeDirectory;
   char* homePhoneNumber;
   char* loginShell;
-  char* mail;
-  char* plan;
-  char* project;
-  char* pgpkey;
-  char* forward;
 } user_t;
 
 typedef struct {
