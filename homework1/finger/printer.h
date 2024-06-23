@@ -16,6 +16,7 @@ char* formatLoginTime(int loginDate);
 char* formatPhone(char* phone);
 char* buildPath(char* homeDirectory, char* fileName);
 
+void printGecos(user_t* user);
 void printIdleTime(idletime_t* idleTime);
 int printSpecialFiles(char* userName, char* homeDirectory);
 int printForwardFile(char* homeDirectory, char* fileName);

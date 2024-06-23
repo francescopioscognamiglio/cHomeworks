@@ -111,16 +111,8 @@ int printMultipleLinesHeader(user_t* user, format_t* format) {
   printf("Name: %s\n", user->realName);
   printf("%s: %-28s", "Directory", user->homeDirectory);
   printf("Shell: %s\n", user->loginShell);
-  char office[30];
-  if (user->officeLocation != NULL) {
-    strncpy(office, user->officeLocation, 12);
-  }
-  if (user->officePhone != NULL) {
-    strncat(office, ", ", 3);
-    strncat(office, formatPhone(user->officePhone), 15);
-  }
-  printf("%s: %-31s", "Office", office);
-  printf("Home Phone: %s\n", formatPhone(user->homePhone));
+
+  printGecos(user);
 
   return EXIT_SUCCESS;
 }
@@ -251,6 +243,22 @@ char* formatPhone(char* phone) {
   return formattedPhone;
 }
 
+void printGecos(user_t* user) {
+  char office[30] = {0};
+  if (user->officeLocation != NULL && user->officeLocation[0] != '\0') {
+    strncpy(office, user->officeLocation, 12);
+  }
+  if (user->officePhone != NULL && user->officePhone[0] != '\0') {
+    strncat(office, ", ", 3);
+    strncat(office, formatPhone(user->officePhone), 15);
+  }
+
+  if (office[0] != '\0') {
+    printf("%s: %-31s", "Office", office);
+    printf("Home Phone: %s\n", formatPhone(user->homePhone));
+  }
+}
+
 void printIdleTime(idletime_t* idleTime) {
   if (idleTime == NULL) {
     return;
@@ -303,6 +311,11 @@ int printForwardFile(char* homeDirectory, char* fileName) {
 }
 
 int printMailStatus(char* mailDirectory, char* userName) {
+  if (userName == NULL || userName[0] == '\0') {
+    printf("No mail.\n");
+    return EXIT_FAILURE;
+  }
+
   char* userMailDirectoryPath = buildPath(mailDirectory, userName);
   DIR* userMailDirectory = opendir(userMailDirectoryPath);
   if (userMailDirectory == NULL) {
