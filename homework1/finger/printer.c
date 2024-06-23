@@ -21,14 +21,14 @@ int print(finger_t* finger) {
     if (finger->format->isMultiLine == true) {
       printMultipleLines(finger->users[i], finger->format);
     } else {
-      printSingleLine(finger->users[i], finger->format);
+      printSingleLine(finger->users[i], finger->format, i == 0);
     }
   }
 
   return EXIT_SUCCESS;
 }
 
-int printSingleLine(user_t* user, format_t* format) {
+int printSingleLine(user_t* user, format_t* format, bool printHeader) {
   // print information on single line
   char loginTimeShort[20];
   time_t ltime = user->loginDate;
@@ -37,8 +37,17 @@ int printSingleLine(user_t* user, format_t* format) {
   char* timeFormat = "%b %d %R";
   strftime(loginTimeShort, sizeof(loginTimeShort), timeFormat, timeinfo);
 
-  printf("Login\tName\tTty\tIdle\tLogin Time\tOffice\tOffice Phone\n");
-  printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+  if (printHeader) {
+    printf("%-10s\t%-10s\t%-5s\t%-5s\t%-5s\t%-5s\t%-5s\n",
+        "Login",
+        "Name",
+        "Tty",
+        "Idle",
+        "Login Time",
+        "Office",
+        "Office Phone");
+  }
+  printf("%-10s\t%-10s\t%-5s\t%-5s\t%-5s\t%-5s\t%-5s\n",
       user->loginName,
       user->realName,
       user->terminalName,
