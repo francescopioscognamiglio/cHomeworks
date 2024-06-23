@@ -18,7 +18,7 @@ int print(finger_t* finger) {
   // iterate over unique users
   for (int i = 0; i < finger->uniqueUsersSize; i++) {
     user_t* lastUser = (user_t*) malloc(sizeof(user_t));
-    // retrieve each logged in user
+    // retrieve each logged user
     bool printHeader = true, printFooter = true;
     for (int j = 0; j < finger->usersSize; j++) {
       if (strcasecmp(finger->uniqueUsers[i], finger->users[j]->loginName) == 0) {
@@ -45,6 +45,7 @@ int print(finger_t* finger) {
     // print footer (only for multiple lines format)
     if (finger->format->isMultiLine == true) {
       printMultipleLinesFooter(lastUser, finger->format);
+      printf("\n");
     }
   }
 
