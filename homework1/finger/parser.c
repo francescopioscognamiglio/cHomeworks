@@ -82,7 +82,7 @@ int parseUsers(int argc, char* argv[], finger_t* finger) {
   }
 
   if (finger->format->foundStyle == false) {
-    if (finger->usersSize > 0) {
+    if (givenOneUser == true) {
       finger->format->isMultiLine = true;
     } else {
       finger->format->isMultiLine = false;
