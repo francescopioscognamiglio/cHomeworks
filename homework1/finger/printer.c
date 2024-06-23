@@ -138,9 +138,11 @@ char* formatPhone(char* phone) {
 char* formatIdleTime(idletime_t* idleTime) {
   char* formattedIdleTime = calloc(7, sizeof(char));
   if (idleTime->hours != 0) {
+    // print hours and minutes
     sprintf(formattedIdleTime, "%d:%d", idleTime->hours, idleTime->minutes);
   } else {
-    sprintf(formattedIdleTime, "%d:%d", idleTime->minutes, idleTime->seconds);
+    // print minutes
+    sprintf(formattedIdleTime, "%d", idleTime->minutes);
   }
   formattedIdleTime[6] = '\0';
   return formattedIdleTime;
