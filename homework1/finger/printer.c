@@ -37,7 +37,6 @@ int printSingleLine(user_t* user, format_t* format) {
   char* timeFormat = "%b %d %R";
   strftime(loginTimeShort, sizeof(loginTimeShort), timeFormat, timeinfo);
 
-  printf("Printing information on single line ...\n");
   printf("Login\tName\tTty\tIdle\tLogin Time\tOffice\tOffice Phone\n");
   printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
       user->loginName,
@@ -60,7 +59,6 @@ int printMultipleLines(user_t* user, format_t* format) {
   char* timeFormatLong = "%a %b %d %R (%Z)";
   strftime(loginTimeLong, sizeof(loginTimeLong), timeFormatLong, timeinfo);
 
-  printf("Printing information on multiple lines ...\n");
   printf("Login: %s\t\t", user->loginName);
   printf("Name: %s\n", user->realName);
   printf("Directory: %s\t\t", user->homeDirectory);
