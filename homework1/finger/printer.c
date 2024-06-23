@@ -38,7 +38,7 @@ int printSingleLine(user_t* user, format_t* format, bool printHeader) {
   strftime(loginTimeShort, sizeof(loginTimeShort), timeFormat, timeinfo);
 
   if (printHeader) {
-    printf("%-10s\t%-10s\t%-5s\t%-5s\t%-5s\t%-5s\t%-5s\n",
+    printf("%-15s%-15s%-5s\t%4s\t%-13s%-8s%-10s\n",
         "Login",
         "Name",
         "Tty",
@@ -47,7 +47,7 @@ int printSingleLine(user_t* user, format_t* format, bool printHeader) {
         "Office",
         "Office Phone");
   }
-  printf("%-10s\t%-10s\t%-5s\t%-5s\t%-5s\t%-5s\t%-5s\n",
+  printf("%-15s%-15s%-5s\t%4s\t%-13s%-8s%-10s\n",
       user->loginName,
       user->realName,
       user->terminalName,
