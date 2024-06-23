@@ -88,11 +88,15 @@ int printSingleLineBody(user_t* user, format_t* format) {
 
 int printMultipleLinesHeader(user_t* user, format_t* format) {
   // print header of multiple lines format
-  printf("Login: %s\t\t", user->loginName);
+  printf("%s: %-32s", "Login", user->loginName);
   printf("Name: %s\n", user->realName);
-  printf("Directory: %s\t\t", user->homeDirectory);
+  printf("%s: %-28s", "Directory", user->homeDirectory);
   printf("Shell: %s\n", user->loginShell);
-  printf("Office: %s, %s\t\t", user->officeLocation, formatPhone(user->officePhone));
+  char office[30];
+  strncpy(office, user->officeLocation, 12);
+  strncat(office, ", ", 3);
+  strncat(office, formatPhone(user->officePhone), 15);
+  printf("%s: %-31s", "Office", office);
   printf("Home Phone: %s\n", formatPhone(user->homePhone));
 
   return EXIT_SUCCESS;
