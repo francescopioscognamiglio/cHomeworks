@@ -1,7 +1,12 @@
 
 int print(finger_t* finger);
-int printSingleLine(user_t* user, format_t* format, bool printHeader);
-int printMultipleLines(user_t* user, format_t* format);
+
+int printSingleLineHeader(user_t* user, format_t* format);
+int printSingleLineBody(user_t* user, format_t* format);
+
+int printMultipleLinesHeader(user_t* user, format_t* format);
+int printMultipleLinesBody(user_t* user, format_t* format);
+int printMultipleLinesFooter(user_t* user, format_t* format);
 
 char* formatPhone(char* phone);
 char* formatIdleTime(idletime_t* idleTime);

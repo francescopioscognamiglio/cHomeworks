@@ -15,21 +15,58 @@
 #define MAIL_DIRECTORY_NAME "/var/mail"
 
 int print(finger_t* finger) {
-  // iterate over users
-  for (int i = 0; i < finger->usersSize; i++) {
+  // iterate over unique users
+  for (int i = 0; i < finger->uniqueUsersSize; i++) {
+    user_t* lastUser = (user_t*) malloc(sizeof(user_t));
+    // retrieve each logged in user
+    bool printHeader = true, printFooter = true;
+    for (int j = 0; j < finger->usersSize; j++) {
+      if (strcasecmp(finger->uniqueUsers[i], finger->users[j]->loginName) == 0) {
+        if (printHeader == true) {
+          // print header
+          if (finger->format->isMultiLine == true) {
+            printMultipleLinesHeader(finger->users[j], finger->format);
+          } else {
+            printSingleLineHeader(finger->users[j], finger->format);
+          }
+          printHeader = false;
+        }
+        // print body of each logged user
+        if (finger->format->isMultiLine == true) {
+          printMultipleLinesBody(finger->users[j], finger->format);
+        } else {
+          printSingleLineBody(finger->users[j], finger->format);
+        }
 
+        // save last user
+        lastUser = finger->users[j];
+      }
+    }
+    // print footer (only for multiple lines format)
     if (finger->format->isMultiLine == true) {
-      printMultipleLines(finger->users[i], finger->format);
-    } else {
-      printSingleLine(finger->users[i], finger->format, i == 0);
+      printMultipleLinesFooter(lastUser, finger->format);
     }
   }
 
   return EXIT_SUCCESS;
 }
 
-int printSingleLine(user_t* user, format_t* format, bool printHeader) {
-  // print information on single line
+int printSingleLineHeader(user_t* user, format_t* format) {
+  // print header of single line format
+  printf("%-15s%-15s%-5s\t%4s\t%-13s%-8s%-10s\n",
+      "Login",
+      "Name",
+      "Tty",
+      "Idle",
+      "Login Time",
+      "Office",
+      "Office Phone");
+
+  return EXIT_SUCCESS;
+}
+
+int printSingleLineBody(user_t* user, format_t* format) {
+  // print body of single line format
   char loginTimeShort[20];
   time_t ltime = user->loginDate;
   struct tm* timeinfo = localtime(&ltime);
@@ -37,16 +74,6 @@ int printSingleLine(user_t* user, format_t* format, bool printHeader) {
   char* timeFormat = "%b %d %R";
   strftime(loginTimeShort, sizeof(loginTimeShort), timeFormat, timeinfo);
 
-  if (printHeader) {
-    printf("%-15s%-15s%-5s\t%4s\t%-13s%-8s%-10s\n",
-        "Login",
-        "Name",
-        "Tty",
-        "Idle",
-        "Login Time",
-        "Office",
-        "Office Phone");
-  }
   printf("%-15s%-15s%-5s\t%4s\t%-13s%-8s%-10s\n",
       user->loginName,
       user->realName,
@@ -59,8 +86,20 @@ int printSingleLine(user_t* user, format_t* format, bool printHeader) {
   return EXIT_SUCCESS;
 }
 
-int printMultipleLines(user_t* user, format_t* format) {
-  // print information on multiple lines
+int printMultipleLinesHeader(user_t* user, format_t* format) {
+  // print header of multiple lines format
+  printf("Login: %s\t\t", user->loginName);
+  printf("Name: %s\n", user->realName);
+  printf("Directory: %s\t\t", user->homeDirectory);
+  printf("Shell: %s\n", user->loginShell);
+  printf("Office: %s, %s\t\t", user->officeLocation, formatPhone(user->officePhone));
+  printf("Home Phone: %s\n", formatPhone(user->homePhone));
+
+  return EXIT_SUCCESS;
+}
+
+int printMultipleLinesBody(user_t* user, format_t* format) {
+  // print body of multiple lines format
   char loginTimeLong[25];
   time_t ltime = user->loginDate;
   struct tm* timeinfo = localtime(&ltime);
@@ -68,16 +107,15 @@ int printMultipleLines(user_t* user, format_t* format) {
   char* timeFormatLong = "%a %b %d %R (%Z)";
   strftime(loginTimeLong, sizeof(loginTimeLong), timeFormatLong, timeinfo);
 
-  printf("Login: %s\t\t", user->loginName);
-  printf("Name: %s\n", user->realName);
-  printf("Directory: %s\t\t", user->homeDirectory);
-  printf("Shell: %s\n", user->loginShell);
-  printf("Office: %s, %s\t\t", user->officeLocation, formatPhone(user->officePhone));
-  printf("Home Phone: %s\n", formatPhone(user->homePhone));
   printf("On since %s on %s from %s\n", loginTimeLong,
       user->terminalName, user->terminalSuffix);
   printIdleTime(user->idleTime);
 
+  return EXIT_SUCCESS;
+}
+
+int printMultipleLinesFooter(user_t* user, format_t* format) {
+  // print footer of multiple lines format
   if (format->showSpecialFiles == true) {
     if (printSpecialFiles(user->realName, user->homeDirectory) == EXIT_FAILURE) {
       return EXIT_FAILURE;

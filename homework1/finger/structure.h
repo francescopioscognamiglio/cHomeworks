@@ -33,4 +33,6 @@ typedef struct {
   format_t* format;
   user_t** users;
   int usersSize;
+  char** uniqueUsers;
+  int uniqueUsersSize;
 } finger_t;

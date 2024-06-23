@@ -60,6 +60,7 @@ int parseOptions(int argc, char* argv[], finger_t* finger) {
 
 int parseUsers(int argc, char* argv[], finger_t* finger) {
   finger->usersSize = 0;
+  finger->uniqueUsersSize = 0;
 
   bool givenOneUser = false;
   // check the provided arguments
@@ -94,6 +95,7 @@ int parseUsers(int argc, char* argv[], finger_t* finger) {
 
 int addInitialUser(char* userName, finger_t* finger) {
   finger->usersSize = 0;
+  finger->uniqueUsersSize = 0;
   return addUser(userName, finger);
 }
 
@@ -178,6 +180,31 @@ int addUser(char* userName, finger_t* finger) {
       terminalSuffix[4] = '\0'; // manually set the string termination character
 
       retrieveGecos(finger->users[finger->usersSize], userPwd);
+
+      // save unique users
+      if (finger->uniqueUsersSize == 0) {
+        // add the first unique user
+        finger->uniqueUsers = (char**) malloc(sizeof(char*));
+        finger->uniqueUsers[finger->uniqueUsersSize] = (char*) calloc(UT_NAMESIZE, sizeof(char));
+        strncpy(finger->uniqueUsers[finger->uniqueUsersSize], loginUserCopy, UT_NAMESIZE);
+        finger->uniqueUsersSize++;
+      } else if (finger->uniqueUsersSize > 0) {
+        // check if this user has already been added
+        bool isUniqueUser = true;
+        for (int i = 0; i < finger->uniqueUsersSize; i++) {
+          if (strcasecmp(loginUserCopy, finger->uniqueUsers[i]) == 0) {
+            isUniqueUser = false;
+            break;
+          }
+        }
+        if (isUniqueUser == true) {
+          // add the next unique user
+          finger->uniqueUsers = (char**) realloc(finger->uniqueUsers, (finger->uniqueUsersSize+1) * sizeof(user_t*));
+          finger->uniqueUsers[finger->uniqueUsersSize] = (char*) calloc(UT_NAMESIZE, sizeof(char));
+          strncpy(finger->uniqueUsers[finger->uniqueUsersSize], loginUserCopy, UT_NAMESIZE);
+          finger->uniqueUsersSize++;
+        }
+      }
 
       finger->usersSize++;
     }
