@@ -1,15 +1,19 @@
 
 int print(finger_t* finger);
 
+int printSingleLine(finger_t* finger);
 int printSingleLineHeader(user_t* user, format_t* format);
 int printSingleLineBody(user_t* user, format_t* format);
 
+int printMultipleLines(finger_t* finger);
 int printMultipleLinesHeader(user_t* user, format_t* format);
 int printMultipleLinesBody(user_t* user, format_t* format);
 int printMultipleLinesFooter(user_t* user, format_t* format);
 
-char* formatPhone(char* phone);
+char* formatTerminalName(char* terminalName);
 char* formatIdleTime(idletime_t* idleTime);
+char* formatLoginTime(int loginDate);
+char* formatPhone(char* phone);
 char* buildPath(char* homeDirectory, char* fileName);
 
 void printIdleTime(idletime_t* idleTime);

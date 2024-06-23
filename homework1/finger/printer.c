@@ -15,37 +15,62 @@
 #define MAIL_DIRECTORY_NAME "/var/mail"
 
 int print(finger_t* finger) {
+  if (finger->format->isMultiLine == true) {
+    printMultipleLines(finger);
+  } else {
+    printSingleLine(finger);
+  }
+
+  return EXIT_SUCCESS;
+}
+
+int printMultipleLines(finger_t* finger) {
   // iterate over unique users
   for (int i = 0; i < finger->uniqueUsersSize; i++) {
     user_t* lastUser = (user_t*) malloc(sizeof(user_t));
     // retrieve each logged user
-    bool printHeader = true, printFooter = true;
+    bool printHeader = true;
     for (int j = 0; j < finger->usersSize; j++) {
       if (strcasecmp(finger->uniqueUsers[i], finger->users[j]->loginName) == 0) {
         if (printHeader == true) {
           // print header
-          if (finger->format->isMultiLine == true) {
-            printMultipleLinesHeader(finger->users[j], finger->format);
-          } else {
-            printSingleLineHeader(finger->users[j], finger->format);
-          }
+          printMultipleLinesHeader(finger->users[j], finger->format);
           printHeader = false;
         }
         // print body of each logged user
-        if (finger->format->isMultiLine == true) {
-          printMultipleLinesBody(finger->users[j], finger->format);
-        } else {
-          printSingleLineBody(finger->users[j], finger->format);
-        }
+        printMultipleLinesBody(finger->users[j], finger->format);
 
         // save last user
         lastUser = finger->users[j];
       }
     }
-    // print footer (only for multiple lines format)
-    if (finger->format->isMultiLine == true) {
-      printMultipleLinesFooter(lastUser, finger->format);
-      printf("\n");
+    // print footer
+    printMultipleLinesFooter(lastUser, finger->format);
+    printf("\n");
+  }
+
+  return EXIT_SUCCESS;
+}
+
+int printSingleLine(finger_t* finger) {
+  // iterate over unique users
+  bool printHeader = true;
+  for (int i = 0; i < finger->uniqueUsersSize; i++) {
+    user_t* lastUser = (user_t*) malloc(sizeof(user_t));
+    // retrieve each logged user
+    for (int j = 0; j < finger->usersSize; j++) {
+      if (strcasecmp(finger->uniqueUsers[i], finger->users[j]->loginName) == 0) {
+        if (printHeader == true) {
+          // print header
+          printSingleLineHeader(finger->users[j], finger->format);
+          printHeader = false;
+        }
+        // print body of each logged user
+        printSingleLineBody(finger->users[j], finger->format);
+
+        // save last user
+        lastUser = finger->users[j];
+      }
     }
   }
 
@@ -68,19 +93,12 @@ int printSingleLineHeader(user_t* user, format_t* format) {
 
 int printSingleLineBody(user_t* user, format_t* format) {
   // print body of single line format
-  char loginTimeShort[20];
-  time_t ltime = user->loginDate;
-  struct tm* timeinfo = localtime(&ltime);
-
-  char* timeFormat = "%b %d %R";
-  strftime(loginTimeShort, sizeof(loginTimeShort), timeFormat, timeinfo);
-
   printf("%-15s%-15s%-5s\t%4s\t%-13s%-8s%-10s\n",
       user->loginName,
       user->realName,
-      user->terminalName,
+      formatTerminalName(user->terminalName),
       formatIdleTime(user->idleTime),
-      loginTimeShort,
+      formatLoginTime(user->loginDate),
       user->officeLocation,
       formatPhone(user->officePhone));
 
@@ -94,9 +112,13 @@ int printMultipleLinesHeader(user_t* user, format_t* format) {
   printf("%s: %-28s", "Directory", user->homeDirectory);
   printf("Shell: %s\n", user->loginShell);
   char office[30];
-  strncpy(office, user->officeLocation, 12);
-  strncat(office, ", ", 3);
-  strncat(office, formatPhone(user->officePhone), 15);
+  if (user->officeLocation != NULL) {
+    strncpy(office, user->officeLocation, 12);
+  }
+  if (user->officePhone != NULL) {
+    strncat(office, ", ", 3);
+    strncat(office, formatPhone(user->officePhone), 15);
+  }
   printf("%s: %-31s", "Office", office);
   printf("Home Phone: %s\n", formatPhone(user->homePhone));
 
@@ -105,6 +127,12 @@ int printMultipleLinesHeader(user_t* user, format_t* format) {
 
 int printMultipleLinesBody(user_t* user, format_t* format) {
   // print body of multiple lines format
+
+  if (user->loginDate <= 0) {
+    printf("Never logged in.\n");
+    return EXIT_SUCCESS;
+  }
+
   char loginTimeLong[25];
   time_t ltime = user->loginDate;
   struct tm* timeinfo = localtime(&ltime);
@@ -130,7 +158,52 @@ int printMultipleLinesFooter(user_t* user, format_t* format) {
   return EXIT_SUCCESS;
 }
 
+char* formatTerminalName(char* terminalName) {
+  if (terminalName == NULL || terminalName[0] == '\0') {
+    return "*";
+  }
+
+  return terminalName;
+}
+
+char* formatIdleTime(idletime_t* idleTime) {
+  if (idleTime == NULL ||
+      (idleTime->hours == -1 && idleTime->minutes == -1 && idleTime->seconds == -1)) {
+    return "*";
+  }
+
+  char* formattedIdleTime = calloc(7, sizeof(char));
+  if (idleTime->hours != 0) {
+    // print hours and minutes
+    sprintf(formattedIdleTime, "%d:%d", idleTime->hours, idleTime->minutes);
+  } else {
+    // print minutes
+    sprintf(formattedIdleTime, "%d", idleTime->minutes);
+  }
+  formattedIdleTime[6] = '\0';
+  return formattedIdleTime;
+}
+
+char* formatLoginTime(int loginDate) {
+  if (loginDate == -1) {
+    return "No logins";
+  }
+
+  char* loginTimeShort = calloc(20, sizeof(char));
+  time_t ltime = loginDate;
+  struct tm* timeinfo = localtime(&ltime);
+
+  char* timeFormat = "%b %d %R";
+  strftime(loginTimeShort, sizeof(loginTimeShort), timeFormat, timeinfo);
+
+  return loginTimeShort;
+}
+
 char* formatPhone(char* phone) {
+  if (phone == NULL) {
+    return "";
+  }
+
   int i = 0;
   while (phone[i] != '\0') {
     i++;
@@ -178,20 +251,11 @@ char* formatPhone(char* phone) {
   return formattedPhone;
 }
 
-char* formatIdleTime(idletime_t* idleTime) {
-  char* formattedIdleTime = calloc(7, sizeof(char));
-  if (idleTime->hours != 0) {
-    // print hours and minutes
-    sprintf(formattedIdleTime, "%d:%d", idleTime->hours, idleTime->minutes);
-  } else {
-    // print minutes
-    sprintf(formattedIdleTime, "%d", idleTime->minutes);
-  }
-  formattedIdleTime[6] = '\0';
-  return formattedIdleTime;
-}
-
 void printIdleTime(idletime_t* idleTime) {
+  if (idleTime == NULL) {
+    return;
+  }
+
   if (idleTime->hours != 0) {
     printf("\t%d hours %d minutes idle\n",
       idleTime->hours,

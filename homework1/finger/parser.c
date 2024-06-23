@@ -113,6 +113,10 @@ int addUser(char* userName, finger_t* finger) {
     return EXIT_FAILURE;
   }
 
+  char userNameCopy[UT_NAMESIZE];
+  strncpy(userNameCopy, userName, UT_NAMESIZE);
+  userNameCopy[UT_NAMESIZE-1] = '\0'; // add string termination character
+
   // retrieve user info
   struct passwd* realUserPwd = getpwuid(getuid());
 
@@ -130,82 +134,16 @@ int addUser(char* userName, finger_t* finger) {
     strncpy(loginUserCopy, loginRecord->ut_user, UT_NAMESIZE);
     loginUserCopy[UT_NAMESIZE-1] = '\0'; // add string termination character
     // print information only of given users
-    if ((strcasecmp(loginUserCopy, userName) == 0) &&
-        (finger->format->useRealName == false || strcasecmp(realUserCopy, userName) == 0)) {
+    if ((strcasecmp(loginUserCopy, userNameCopy) == 0) &&
+        (finger->format->useRealName == false || strcasecmp(realUserCopy, userNameCopy) == 0)) {
       userFound = true;
-
-      // allocate memory for user information
-      finger->users[finger->usersSize] = (user_t*) malloc(sizeof(user_t));
-      if (finger->users[finger->usersSize] == NULL) {
-        printf("There was an error allocating the memory.\n");
-        return EXIT_FAILURE;
-      }
 
       struct passwd* userPwd = getpwnam(loginUserCopy);
 
-      char terminalSuffix[5];
-      strncpy(terminalSuffix, loginRecord->ut_id, 4);
-      terminalSuffix[4] = '\0';
-
-      struct stat* ttyStat = malloc(sizeof(struct stat));
-      char terminalName[UT_LINESIZE+6];
-      strncpy(terminalName, "/dev/", UT_LINESIZE);
-      strncat(terminalName, loginRecord->ut_line, UT_LINESIZE);
-      terminalName[UT_LINESIZE+5] = '\0';
-      stat(terminalName, ttyStat);
-
-      finger->users[finger->usersSize]->loginName = (char*) calloc(UT_NAMESIZE, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->loginName, loginUserCopy, UT_NAMESIZE);
-
-      finger->users[finger->usersSize]->realName = (char*) calloc(UT_NAMESIZE, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->realName, realUserCopy, UT_NAMESIZE);
-
-      finger->users[finger->usersSize]->terminalName = (char*) calloc(UT_LINESIZE, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->terminalName, loginRecord->ut_line, UT_LINESIZE);
-
-      retrieveIdleTime(finger->users[finger->usersSize], ttyStat->st_atime);
-
-      finger->users[finger->usersSize]->loginDate = loginRecord->ut_tv.tv_sec;
-
-      // FIXME: is there a limit of chars for the home directory?
-      finger->users[finger->usersSize]->homeDirectory = (char*) calloc(100, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->homeDirectory, userPwd->pw_dir, 100);
-
-      // FIXME: is there a limit of chars for the login shell?
-      finger->users[finger->usersSize]->loginShell = (char*) calloc(100, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->loginShell, userPwd->pw_shell, 100);
-
-      finger->users[finger->usersSize]->terminalSuffix = (char*) calloc(5, sizeof(char));
-      strncpy(finger->users[finger->usersSize]->terminalSuffix, loginRecord->ut_id, 4);
-      terminalSuffix[4] = '\0'; // manually set the string termination character
-
-      retrieveGecos(finger->users[finger->usersSize], userPwd);
-
-      // save unique users
-      if (finger->uniqueUsersSize == 0) {
-        // add the first unique user
-        finger->uniqueUsers = (char**) malloc(sizeof(char*));
-        finger->uniqueUsers[finger->uniqueUsersSize] = (char*) calloc(UT_NAMESIZE, sizeof(char));
-        strncpy(finger->uniqueUsers[finger->uniqueUsersSize], loginUserCopy, UT_NAMESIZE);
-        finger->uniqueUsersSize++;
-      } else if (finger->uniqueUsersSize > 0) {
-        // check if this user has already been added
-        bool isUniqueUser = true;
-        for (int i = 0; i < finger->uniqueUsersSize; i++) {
-          if (strcasecmp(loginUserCopy, finger->uniqueUsers[i]) == 0) {
-            isUniqueUser = false;
-            break;
-          }
-        }
-        if (isUniqueUser == true) {
-          // add the next unique user
-          finger->uniqueUsers = (char**) realloc(finger->uniqueUsers, (finger->uniqueUsersSize+1) * sizeof(user_t*));
-          finger->uniqueUsers[finger->uniqueUsersSize] = (char*) calloc(UT_NAMESIZE, sizeof(char));
-          strncpy(finger->uniqueUsers[finger->uniqueUsersSize], loginUserCopy, UT_NAMESIZE);
-          finger->uniqueUsersSize++;
-        }
-      }
-
+      allocateNewUser(finger);
+      retrieveGeneralInformation(finger->users[finger->usersSize], userPwd, realUserCopy);
+      retrieveLoginRecordInformation(finger->users[finger->usersSize], userPwd, loginRecord, loginUserCopy);
+      saveUniqueUser(finger, loginUserCopy);
       finger->usersSize++;
     }
 
@@ -217,11 +155,106 @@ int addUser(char* userName, finger_t* finger) {
   endutent();
 
   if (userFound == false) {
-    printf("finger: %s: no such user.\n", userName);
-    return EXIT_SUCCESS;
+    realUserPwd = getpwnam(userNameCopy);
+    if (realUserPwd == NULL) {
+      printf("finger: %s: no such user.\n", userNameCopy);
+      return EXIT_SUCCESS;
+    }
+    allocateNewUser(finger);
+    retrieveGeneralInformation(finger->users[finger->usersSize], realUserPwd, userNameCopy);
+    saveUniqueUser(finger, userNameCopy);
+    finger->usersSize++;
   }
 
   return EXIT_SUCCESS;
+}
+
+int allocateNewUser(finger_t* finger) {
+  // allocate memory for user information
+  finger->users[finger->usersSize] = (user_t*) malloc(sizeof(user_t));
+  if (finger->users[finger->usersSize] == NULL) {
+    printf("There was an error allocating the memory.\n");
+    return EXIT_FAILURE;
+  }
+
+  finger->users[finger->usersSize]->realName = (char*) calloc(UT_NAMESIZE, sizeof(char));
+  finger->users[finger->usersSize]->homeDirectory = (char*) calloc(100, sizeof(char));
+  finger->users[finger->usersSize]->loginShell = (char*) calloc(100, sizeof(char));
+  finger->users[finger->usersSize]->loginName = (char*) calloc(UT_NAMESIZE, sizeof(char));
+  finger->users[finger->usersSize]->terminalName = (char*) calloc(UT_LINESIZE, sizeof(char));
+  finger->users[finger->usersSize]->loginDate = -1;
+  finger->users[finger->usersSize]->terminalSuffix = (char*) calloc(5, sizeof(char));
+  finger->users[finger->usersSize]->idleTime = (idletime_t*) malloc(sizeof(idletime_t));
+  finger->users[finger->usersSize]->idleTime->hours = -1;
+  finger->users[finger->usersSize]->idleTime->minutes = -1;
+  finger->users[finger->usersSize]->idleTime->seconds = -1;
+  finger->users[finger->usersSize]->officeLocation = (char*) calloc(20, sizeof(char));
+  finger->users[finger->usersSize]->officePhone = (char*) calloc(20, sizeof(char));
+  finger->users[finger->usersSize]->homePhone = (char*) calloc(20, sizeof(char));
+
+  return EXIT_SUCCESS;
+}
+
+void saveUniqueUser(finger_t* finger, char* userName) {
+  // save unique users
+  if (finger->uniqueUsersSize == 0) {
+    // add the first unique user
+    finger->uniqueUsers = (char**) malloc(sizeof(char*));
+    finger->uniqueUsers[finger->uniqueUsersSize] = (char*) calloc(UT_NAMESIZE, sizeof(char));
+    strncpy(finger->uniqueUsers[finger->uniqueUsersSize], userName, UT_NAMESIZE);
+    finger->uniqueUsersSize++;
+  } else if (finger->uniqueUsersSize > 0) {
+    // check if this user has already been added
+    bool isUniqueUser = true;
+    for (int i = 0; i < finger->uniqueUsersSize; i++) {
+      if (strcasecmp(userName, finger->uniqueUsers[i]) == 0) {
+        isUniqueUser = false;
+        break;
+      }
+    }
+    if (isUniqueUser == true) {
+      // add the next unique user
+      finger->uniqueUsers = (char**) realloc(finger->uniqueUsers, (finger->uniqueUsersSize+1) * sizeof(user_t*));
+      finger->uniqueUsers[finger->uniqueUsersSize] = (char*) calloc(UT_NAMESIZE, sizeof(char));
+      strncpy(finger->uniqueUsers[finger->uniqueUsersSize], userName, UT_NAMESIZE);
+      finger->uniqueUsersSize++;
+    }
+  }
+}
+
+void retrieveGeneralInformation(user_t* user, struct passwd* userPwd, char* userName) {
+  strncpy(user->loginName, userName, UT_NAMESIZE);
+
+  // FIXME: is there a limit of chars for the home directory?
+  strncpy(user->homeDirectory, userPwd->pw_dir, 100);
+
+  // FIXME: is there a limit of chars for the login shell?
+  strncpy(user->loginShell, userPwd->pw_shell, 100);
+
+  retrieveGecos(user, userPwd);
+}
+
+void retrieveLoginRecordInformation(user_t* user, struct passwd* userPwd, struct utmp* loginRecord, char* userName) {
+  char terminalSuffix[5];
+  strncpy(terminalSuffix, loginRecord->ut_id, 4);
+  terminalSuffix[4] = '\0';
+
+  struct stat* ttyStat = malloc(sizeof(struct stat));
+  char terminalName[UT_LINESIZE+6];
+  strncpy(terminalName, "/dev/", UT_LINESIZE);
+  strncat(terminalName, loginRecord->ut_line, UT_LINESIZE);
+  terminalName[UT_LINESIZE+5] = '\0';
+  stat(terminalName, ttyStat);
+  retrieveIdleTime(user, ttyStat->st_atime);
+
+  strncpy(user->realName, userName, UT_NAMESIZE);
+
+  strncpy(user->terminalName, loginRecord->ut_line, UT_LINESIZE);
+
+  user->loginDate = loginRecord->ut_tv.tv_sec;
+
+  strncpy(user->terminalSuffix, loginRecord->ut_id, 4);
+  terminalSuffix[4] = '\0'; // manually set the string termination character
 }
 
 void retrieveIdleTime(user_t* user, long accessTime) {
@@ -234,7 +267,6 @@ void retrieveIdleTime(user_t* user, long accessTime) {
       int idleTimeAllMinutes = idleTime / 60;
       int idleTimeMinutes = idleTimeAllMinutes % 60;
       int idleTimeSeconds = idleTime % 60;
-      user->idleTime = (idletime_t*) malloc(sizeof(idletime_t));
       user->idleTime->hours = idleTimeHours;
       user->idleTime->minutes = idleTimeMinutes;
       user->idleTime->seconds = idleTimeSeconds;
@@ -247,9 +279,6 @@ void retrieveGecos(user_t* user, struct passwd* userPwd) {
   // - the office location
   // - the office phone
   // - the home phone
-  user->officeLocation = NULL;
-  user->officePhone = NULL;
-  user->homePhone = NULL;
   int start = 0, offset = 0, i = -1;
   int step = 0;
   do {
@@ -262,15 +291,12 @@ void retrieveGecos(user_t* user, struct passwd* userPwd) {
       gecosSingleParameter[offset+1] = '\0';
       switch (step) {
         case 1:
-          user->officeLocation = (char*) calloc(20, sizeof(char));
           strncpy(user->officeLocation, gecosSingleParameter, 20);
           break;
         case 2:
-          user->officePhone = (char*) calloc(20, sizeof(char));
           strncpy(user->officePhone, gecosSingleParameter, 20);
           break;
         case 3:
-          user->homePhone = (char*) calloc(20, sizeof(char));
           strncpy(user->homePhone, gecosSingleParameter, 20);
           break;
       }
