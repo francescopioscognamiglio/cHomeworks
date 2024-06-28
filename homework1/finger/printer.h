@@ -1,3 +1,8 @@
+#define FORWARD_FILE_NAME ".forward"
+#define PGPKEY_FILE_NAME ".pgpkey"
+#define PLAN_FILE_NAME ".plan"
+#define PROJECT_FILE_NAME ".project"
+#define MAIL_DIRECTORY_NAME "/var/mail"
 
 int print(finger_t* finger);
 
