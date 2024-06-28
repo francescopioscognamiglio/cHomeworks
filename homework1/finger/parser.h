@@ -1,4 +1,5 @@
-#include <pwd.h> // included to use the password file
+#include <pwd.h> // included to use the passwd structure
+#include <utmp.h> // included to use the utmp structure
 
 int addInitialUser(char* userName, finger_t* finger);
 int addUser(char* userName, finger_t* finger);
