@@ -44,7 +44,7 @@ Il comando:
 
     myFTclient -w -a server_address -p port -f local_path/filename_local
 
-Si comporta come il precedente ma il nome del path remoto e del file remoto sono gli stessi del path e file locale.
+si comporta come il precedente ma il nome del path remoto e del file remoto sono gli stessi del path e file locale.
 
 Il comando:
 
