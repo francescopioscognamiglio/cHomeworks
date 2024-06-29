@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   int listenFd = *listenFdPtr;
 
   // build the address
-  struct sockaddr_in* serverAddress = buildAddress(listenFd);
+  struct sockaddr_in* serverAddress = buildAddress(listenFd, options->address, options->port);
   if (serverAddress == NULL) {
     exit(2);
   }

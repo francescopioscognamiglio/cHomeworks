@@ -10,10 +10,6 @@
 #include "parser.h"
 #include "client.h"
 
-#define ADDRESS "127.0.0.1"
-#define PORT_NO 5000
-#define BUFFER_SIZE 1025
-
 int main(int argc, char **argv) {
 
   // read options
@@ -30,7 +26,7 @@ int main(int argc, char **argv) {
   int clientFd = *clientFdPtr;
 
   // build the address
-  struct sockaddr_in* serverAddress = buildAddress(clientFd);
+  struct sockaddr_in* serverAddress = buildAddress(clientFd, options->address, options->port);
   if (serverAddress == NULL) {
     exit(2);
   }

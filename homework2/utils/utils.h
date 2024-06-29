@@ -15,4 +15,4 @@
 #define PATH_SIZE 200
 
 int* createSocket();
-struct sockaddr_in* buildAddress(int listenFd);
+struct sockaddr_in* buildAddress(int listenFd, char* address, int port);

@@ -13,12 +13,12 @@ int* createSocket() {
   return listenFdPtr;
 }
 
-struct sockaddr_in* buildAddress(int listenFd) {
+struct sockaddr_in* buildAddress(int listenFd, char* address, int port) {
   struct sockaddr_in* serverAddress;
   memset(serverAddress, 0, sizeof(serverAddress)); // be sure that the area is cleaned
   serverAddress->sin_family = AF_INET;
-  serverAddress->sin_addr.s_addr = inet_addr(ADDRESS);
-  serverAddress->sin_port = htons(PORT_NO);
+  serverAddress->sin_addr.s_addr = inet_addr(address);
+  serverAddress->sin_port = htons(port);
   if (bind(listenFd, (struct sockaddr*)serverAddress, sizeof(serverAddress))) {
     perror("Error while setting the address to the socket");
     return NULL;
