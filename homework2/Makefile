@@ -1,7 +1,7 @@
 install: installServer installClient
 
-installServer: utils.o server.o
-	cc -o myFTserver utils.o server.o
+installServer: utils.o parser.o server.o
+	cc -o myFTserver utils.o parser.o server.o
 
 installClient: utils.o client.o
 	cc -o myFTclient utils.o client.o
@@ -14,3 +14,6 @@ client.o: client/client.c client/client.h
 
 utils.o: utils/utils.c utils/utils.h
 	cc -c utils/utils.c
+
+parser.o: server/parser.c server/parser.h
+	cc -c server/parser.c
