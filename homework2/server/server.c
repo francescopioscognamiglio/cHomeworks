@@ -49,34 +49,6 @@ int main(int argc, char **argv) {
   return EXIT_SUCCESS;
 }
 
-int* createSocket() {
-  int listenFd = socket(AF_INET, SOCK_STREAM, 0); // AF_INET is the TCP/IP protocol
-                                                  // SOCK_STREAM is the TCP transfer service
-  if (listenFd == -1) {
-    perror("Error while opening the socket");
-    return NULL;
-  }
-
-  printf("Socket has been created ...\n");
-  int* listenFdPtr = &listenFd;
-  return listenFdPtr;
-}
-
-struct sockaddr_in* buildAddress(int listenFd) {
-  struct sockaddr_in* serverAddress;
-  memset(serverAddress, 0, sizeof(serverAddress)); // be sure that the area is cleaned
-  serverAddress->sin_family = AF_INET;
-  serverAddress->sin_addr.s_addr = inet_addr(ADDRESS);
-  serverAddress->sin_port = htons(PORT_NO);
-  if (bind(listenFd, (struct sockaddr*)serverAddress, sizeof(serverAddress))) {
-    perror("Error while setting the address to the socket");
-    return NULL;
-  }
-
-  printf("Address has been set ...\n");
-  return serverAddress;
-}
-
 int setListenMode(int listenFd) {
   // set passive mode (server listens) and the maximum pending requests
   if (listen(listenFd, MAX_PENDING_REQUESTS) == -1) {
