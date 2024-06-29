@@ -1,6 +1,13 @@
+#include "parser.h"
 #include "server.h"
 
 int main(int argc, char **argv) {
+
+  options_t* options = parseOptions(argc, argv);
+  if (options == NULL) {
+    return EXIT_FAILURE;
+  }
+
   // create the socket
   int* listenFdPtr = createSocket();
   if (listenFdPtr == NULL) {
