@@ -3,3 +3,5 @@
 *.gch
 *.o
 homework1/finger/finger
+homework2/myFTserver
+homework2/myFTclient
