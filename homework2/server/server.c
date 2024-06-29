@@ -3,6 +3,7 @@
 
 int main(int argc, char **argv) {
 
+  // read options
   options_t* options = parseOptions(argc, argv);
   if (options == NULL) {
     return EXIT_FAILURE;

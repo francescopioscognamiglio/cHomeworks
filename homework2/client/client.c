@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h> // useful to use htonl and htons
 #include <netdb.h> // useful to use gethostbyname
+#include "parser.h"
 #include "client.h"
 
 #define ADDRESS "127.0.0.1"
@@ -14,6 +15,13 @@
 #define BUFFER_SIZE 1025
 
 int main(int argc, char **argv) {
+
+  // read options
+  options_t* options = parseOptions(argc, argv);
+  if (options == NULL) {
+    return EXIT_FAILURE;
+  }
+
   // create the socket
   int* clientFdPtr = createSocket();
   if (clientFdPtr == NULL) {

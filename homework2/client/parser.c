@@ -11,9 +11,13 @@ options_t* parseOptions(int argc, char* argv[]) {
   }
 
   // init options
+  options->write = false;
+  options->read = false;
+  options->list = false;
   options->address = NULL;
   options->port = -1;
-  options->rootDirectory = NULL;
+  options->fPath = NULL;
+  options->oPath = NULL;
 
   // check the provided arguments
   // skip the first argument that is the program name
@@ -33,14 +37,23 @@ options_t* parseOptions(int argc, char* argv[]) {
       }
 
       // set the value
-      if (argv[i][1] == 'a') {
+      if (argv[i][1] == 'w') {
+        options->write = true;
+      } else if (argv[i][1] == 'r') {
+        options->read = true;
+      } else if (argv[i][1] == 'l') {
+        options->list = true;
+      } else if (argv[i][1] == 'a') {
         options->address = (char*) calloc(ADDRESS_SIZE, sizeof(char));
         strncpy(options->address, argv[++i], ADDRESS_SIZE);
       } else if (argv[i][1] == 'p') {
         options->port = atoi(argv[++i]); // convert string to int
-      } else if (argv[i][1] == 'd') {
-        options->rootDirectory = (char*) calloc(PATH_SIZE, sizeof(char));
-        strncpy(options->rootDirectory, argv[++i], PATH_SIZE);
+      } else if (argv[i][1] == 'f') {
+        options->fPath = (char*) calloc(PATH_SIZE, sizeof(char));
+        strncpy(options->fPath, argv[++i], PATH_SIZE);
+      } else if (argv[i][1] == 'o') {
+        options->oPath = (char*) calloc(PATH_SIZE, sizeof(char));
+        strncpy(options->oPath, argv[++i], PATH_SIZE);
       } else {
         fprintf(stderr, "Invalid option: %s\n", argv[i]);
         return NULL;
@@ -49,6 +62,17 @@ options_t* parseOptions(int argc, char* argv[]) {
       fprintf(stderr, "Invalid argument: %s\n", argv[i]);
       return NULL;
     }
+  }
+
+  // check exclusive options
+  if (options->write && options->read && options->list) {
+    fprintf(stderr, "Specify only one between: -w -r -l\n");
+  } if (options->write && options->read) {
+    fprintf(stderr, "Specify only one between: -w -r\n");
+  } else if (options->write && options->list) {
+    fprintf(stderr, "Specify only one between: -w -l\n");
+  } else if (options->read && options->list) {
+    fprintf(stderr, "Specify only one between: -r -l\n");
   }
 
   // check mandatory options
@@ -60,8 +84,8 @@ options_t* parseOptions(int argc, char* argv[]) {
       fprintf(stderr, "Missing mandatory option: -p\n");
       return NULL;
   }
-  if (options->rootDirectory == NULL) {
-      fprintf(stderr, "Missing mandatory option: -d\n");
+  if (options->fPath == NULL) {
+      fprintf(stderr, "Missing mandatory option: -f\n");
       return NULL;
   }
 
