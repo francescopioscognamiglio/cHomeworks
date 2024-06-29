@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "parser.h"
 #include "server.h"
 
@@ -6,7 +7,13 @@ int main(int argc, char **argv) {
   // read options
   options_t* options = parseOptions(argc, argv);
   if (options == NULL) {
-    return EXIT_FAILURE;
+    exit(8);
+  }
+
+  // create root directory if missing
+  if (!createParentDirectories(options->rootDirectory)) {
+    perror("Error while creating root directory");
+    exit(7);
   }
 
   // create the socket

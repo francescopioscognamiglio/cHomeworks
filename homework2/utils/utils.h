@@ -16,3 +16,7 @@
 
 int* createSocket();
 struct sockaddr_in* buildAddress(int listenFd, char* address, int port);
+
+bool isExistingDirectory(char* directory);
+bool createParentDirectories(char* directory);
+bool createDirectory(char* directory);
