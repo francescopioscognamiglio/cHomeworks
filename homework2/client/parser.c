@@ -11,9 +11,9 @@ options_t* parseOptions(int argc, char* argv[]) {
   }
 
   // init options
-  options->write = false;
-  options->read = false;
-  options->list = false;
+  options->isWrite = false;
+  options->isRead = false;
+  options->isList = false;
   options->address = NULL;
   options->port = -1;
   options->sourcePath = NULL;
@@ -38,11 +38,11 @@ options_t* parseOptions(int argc, char* argv[]) {
 
       // set the value
       if (argv[i][1] == 'w') {
-        options->write = true;
+        options->isWrite = true;
       } else if (argv[i][1] == 'r') {
-        options->read = true;
+        options->isRead = true;
       } else if (argv[i][1] == 'l') {
-        options->list = true;
+        options->isList = true;
       } else if (argv[i][1] == 'a') {
         options->address = (char*) calloc(ADDRESS_SIZE, sizeof(char));
         strncpy(options->address, argv[++i], ADDRESS_SIZE);
@@ -65,13 +65,13 @@ options_t* parseOptions(int argc, char* argv[]) {
   }
 
   // check exclusive options
-  if (options->write && options->read && options->list) {
+  if (options->isWrite && options->isRead && options->isList) {
     fprintf(stderr, "Specify only one between: -w -r -l\n");
-  } if (options->write && options->read) {
+  } if (options->isWrite && options->isRead) {
     fprintf(stderr, "Specify only one between: -w -r\n");
-  } else if (options->write && options->list) {
+  } else if (options->isWrite && options->isList) {
     fprintf(stderr, "Specify only one between: -w -l\n");
-  } else if (options->read && options->list) {
+  } else if (options->isRead && options->isList) {
     fprintf(stderr, "Specify only one between: -r -l\n");
   }
 

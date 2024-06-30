@@ -1,9 +1,9 @@
 #include <stdbool.h>
 
 typedef struct {
-  bool write;
-  bool read;
-  bool list;
+  bool isWrite;
+  bool isRead;
+  bool isList;
   char* address;
   int port;
   char* sourcePath;
