@@ -14,6 +14,7 @@
 #define PORT_NO 5000
 #define BUFFER_SIZE 1025
 #define PATH_SIZE 200
+#define FILENAME_SIZE 20
 
 int prepareConnection(char* address, int port);
 int establishConnection(char* address, int port);
@@ -24,3 +25,6 @@ char* receiveCommand(int fd);
 bool isExistingDirectory(char* directory);
 bool createParentDirectories(char* directory);
 bool createDirectory(char* directory);
+
+char* getPathWithoutFileName(char* command, char* rootPath);
+char* getFileName(char* command);

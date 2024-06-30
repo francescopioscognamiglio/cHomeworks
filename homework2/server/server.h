@@ -9,4 +9,4 @@
 #include <arpa/inet.h> // useful to use htonl and htons
 #include "../utils/utils.h"
 
-int handleRequest(int fd);
+int handleRequest(options_t* options, int fd);

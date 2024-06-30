@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     }
     if (pid == 0) {
       // child process
-      handleRequest(connectedFd);
+      handleRequest(options, connectedFd);
     } else {
       // parent process
       if (close(connectedFd)) {
@@ -52,22 +52,35 @@ int main(int argc, char **argv) {
   return EXIT_SUCCESS;
 }
 
-int handleRequest(int fd) {
-  // TODO: server side:
+int handleRequest(options_t* options, int fd) {
+  // receive the command from the client
   char* buffer = receiveCommand(fd);
   if (buffer == NULL) {
     exit(4);
   }
-  // 1. write a file to the server:
-  //    - receive the write command and the file path to create
-  //    - receive the bytes of the file
-  //    - (optional) send if the operation is successful
-  // 2. read a file from the server:
-  //    - receive the read command and the file path to read
-  //    - send the bytes of the file
-  // 3. read directories/files from the server:
-  //    - receive the list command and the file path to list
-  //    - send the list of directories/files into the file path as bytes
+
+  char mode = buffer[0];
+  char* pathWithoutFileName = getPathWithoutFileName(buffer, options->rootDirectory);
+  char* fileName = getFileName(buffer);
+
+  if (mode == 'w') {
+    // 1. write a file to the server:
+    //    - create the directories of the file path if missing
+    if (!createParentDirectories(pathWithoutFileName)) {
+      perror("Error while creating root directory");
+      exit(7);
+    }
+    //    - receive the bytes of the file
+    //    - (optional) send if the operation is successful
+  } else if (mode == 'r') {
+    // 2. read a file from the server:
+    //    - receive the read command and the file path to read
+    //    - send the bytes of the file
+  } else if (mode == 'l') {
+    // 3. read directories/files from the server:
+    //    - receive the list command and the file path to list
+    //    - send the list of directories/files into the file path as bytes
+  }
 
   // close the socket
   if (close(fd)) {

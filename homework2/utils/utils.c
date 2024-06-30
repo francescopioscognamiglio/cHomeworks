@@ -186,3 +186,50 @@ char* receiveCommand(int fd) {
   printf("Reading command: %s\n", buffer);
   return buffer;
 }
+
+int getIndexOfLastFileSeparator(char* command) {
+  // retrieve the last file separator '/' in order to skip the file name
+  int lastFileSeparator = -1;
+  for (int i = 0; command[i] != '\0'; i++) {
+    if (command[i] == '/') {
+      lastFileSeparator = i;
+    }
+  }
+
+  return lastFileSeparator;
+}
+
+char* getPathWithoutFileName(char* command, char* rootPath) {
+  char* path = calloc(1, PATH_SIZE*2);
+
+  // the first character is the mode, so skip it
+  // the second character is the separator ':', so skip it
+  // the path starts from the third character
+  char* pathToCopy = &command[2];
+
+  // retrieve the last file separator '/' in order to skip the file name
+  int pathEnd = getIndexOfLastFileSeparator(command)-1;
+
+  // build the absolute path:
+  // append the root path
+  strncpy(path, rootPath, PATH_SIZE);
+  // append a file separator
+  strncat(path, "/", 2);
+  // append the extracted path
+  strncat(path, pathToCopy, pathEnd);
+
+  return path;
+}
+
+char* getFileName(char* command) {
+  char* fileName = calloc(1, FILENAME_SIZE);
+
+  // retrieve the last file separator '/' in order to skip the directories path
+  int fileNameStart = getIndexOfLastFileSeparator(command)+1;
+  char* fileNameToCopy = &command[fileNameStart];
+
+  // append the file name
+  strncpy(fileName, fileNameToCopy, FILENAME_SIZE);
+
+  return fileName;
+}
