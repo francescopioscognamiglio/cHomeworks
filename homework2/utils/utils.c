@@ -139,3 +139,50 @@ bool createDirectory(char* directory) {
   }
   return true;
 }
+
+bool sendMessage(int fd, char* buffer, int bufferSize) {
+  // send the message to the socket
+  // having the file descriptor, it's possible to use the write system call
+  if (write(fd, buffer, bufferSize) == -1) {
+    perror("Error while writing to the socket");
+    return false;
+  }
+
+  printf("Message \"%s\" has been sent ...\n", buffer);
+  return true;
+}
+
+bool sendCommand(int fd, char* mode, char* path) {
+  int bufferSize = PATH_SIZE+2;
+  char* buffer = calloc(1, bufferSize);
+  strncpy(buffer, mode, 1);
+  strncat(buffer, ":", 2);
+  strncat(buffer, path, PATH_SIZE);
+
+  printf("Sending command: %s\n", buffer);
+  return sendMessage(fd, buffer, bufferSize);
+}
+
+bool receiveMessage(int fd, char* buffer, int bufferSize) {
+  // read the message from the socket
+  // having the file descriptor, it's possible to use the read system call
+  int readBytes = read(fd, buffer, bufferSize);
+  if (readBytes == -1) {
+    perror("Error while reading from the socket");
+    return false;
+  }
+
+  printf("Message \"%s\" has been received ...\n", buffer);
+  return true;
+}
+
+char* receiveCommand(int fd) {
+  int bufferSize = PATH_SIZE+2;
+  char* buffer = calloc(1, bufferSize);
+  if (!receiveMessage(fd, buffer, bufferSize)) {
+    return NULL;
+  }
+
+  printf("Reading command: %s\n", buffer);
+  return buffer;
+}

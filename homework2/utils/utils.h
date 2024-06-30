@@ -18,6 +18,9 @@
 int prepareConnection(char* address, int port);
 int establishConnection(char* address, int port);
 
+bool sendCommand(int fd, char* mode, char* path);
+char* receiveCommand(int fd);
+
 bool isExistingDirectory(char* directory);
 bool createParentDirectories(char* directory);
 bool createDirectory(char* directory);

@@ -31,10 +31,6 @@ int main(int argc, char **argv) {
     }
     printf("Connection has been accepted ...\n");
 
-    // TODO: read the command from the client
-    // TODO: perform the operation
-    // TODO: send the result to the client (if needed)
-
     pid_t pid = fork();
     if (pid == -1) {
       perror("Error while creating the child process");
@@ -42,7 +38,7 @@ int main(int argc, char **argv) {
     }
     if (pid == 0) {
       // child process
-      handleConnection(connectedFd);
+      handleRequest(connectedFd);
     } else {
       // parent process
       if (close(connectedFd)) {
@@ -56,23 +52,25 @@ int main(int argc, char **argv) {
   return EXIT_SUCCESS;
 }
 
-int handleConnection(int connectedFd) {
-  char sendBuffer[BUFFER_SIZE];
-  memset(sendBuffer, 0, sizeof(sendBuffer)); // be sure that the area is cleaned
-
-  // useful to perform calculations without blocking other pending requests
-  snprintf(sendBuffer, sizeof(sendBuffer), "This is the message to the client");
-
-  // send the message to the socket
-  // since I have the file descriptor, I can use the write system call instead of the send one
-  if (write(connectedFd, sendBuffer, strlen(sendBuffer)) == -1) {
-    perror("Error while writing to the socket");
-    exit(6);
+int handleRequest(int fd) {
+  // TODO: server side:
+  char* buffer = receiveCommand(fd);
+  if (buffer == NULL) {
+    exit(4);
   }
-  printf("Message \"%s\" has been sent ...\n", sendBuffer);
+  // 1. write a file to the server:
+  //    - receive the write command and the file path to create
+  //    - receive the bytes of the file
+  //    - (optional) send if the operation is successful
+  // 2. read a file from the server:
+  //    - receive the read command and the file path to read
+  //    - send the bytes of the file
+  // 3. read directories/files from the server:
+  //    - receive the list command and the file path to list
+  //    - send the list of directories/files into the file path as bytes
 
   // close the socket
-  if (close(connectedFd)) {
+  if (close(fd)) {
     perror("Error while closing the socket");
     exit(7);
   }

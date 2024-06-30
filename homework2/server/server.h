@@ -9,5 +9,4 @@
 #include <arpa/inet.h> // useful to use htonl and htons
 #include "../utils/utils.h"
 
-int setListenMode(int listenFd);
-int handleConnection(int connectedFd);
+int handleRequest(int fd);

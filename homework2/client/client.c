@@ -24,26 +24,36 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  // TODO: send the command to the server
-  // TODO: read the result from the server (if needed)
-
-  char readBuffer[BUFFER_SIZE];
-  memset(readBuffer, 0, sizeof(readBuffer)); // be sure that the area is cleaned
-
-  // read the message from the socket
-  // since I have the file descriptor, I can use the read system call instead of the recv one
-  int readBytes = read(fd, readBuffer, BUFFER_SIZE);
-  if (readBytes == -1) {
-    perror("Error while reading from the socket");
-    exit(4);
+  // TODO: client side:
+  if (options->isWrite) {
+    // 1. write a file to the server:
+    //    - send the write command and the file path to be created
+    if (!sendCommand(fd, "w", options->targetPath)) {
+      exit(4);
+    }
+    //    - send the bytes of the file
+    //    - (optional) receive if the operation is successful
+  } else if (options->isRead) {
+    // 2. read a file from the server:
+    //    - send the read command and the file path to read
+    if (!sendCommand(fd, "r", options->sourcePath)) {
+      exit(4);
+    }
+    //    - receive the bytes of the file
+    //    - write the file to the file path
+  } else if (options->isList) {
+    // 3. read directories/files from the server:
+    //    - send the list command
+    if (!sendCommand(fd, "l", options->sourcePath)) {
+      exit(4);
+    }
+    //    - receive the list of directories/files into the file path as bytes
   }
-  printf("Read %d bytes from the server ...\n", readBytes);
-  printf("Message received from the server: %s\n", readBuffer);
 
   // close the socket
   if (close(fd)) {
     perror("Error while closing the socket");
-    exit(5);
+    exit(10);
   }
 
   return EXIT_SUCCESS;
