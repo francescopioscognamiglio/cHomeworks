@@ -6,8 +6,8 @@ typedef struct {
   bool list;
   char* address;
   int port;
-  char* fPath;
-  char* oPath;
+  char* sourcePath;
+  char* targetPath;
 } options_t;
 
 options_t* parseOptions(int argc, char* argv[]);

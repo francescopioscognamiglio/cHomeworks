@@ -16,8 +16,8 @@ options_t* parseOptions(int argc, char* argv[]) {
   options->list = false;
   options->address = NULL;
   options->port = -1;
-  options->fPath = NULL;
-  options->oPath = NULL;
+  options->sourcePath = NULL;
+  options->targetPath = NULL;
 
   // check the provided arguments
   // skip the first argument that is the program name
@@ -49,11 +49,11 @@ options_t* parseOptions(int argc, char* argv[]) {
       } else if (argv[i][1] == 'p') {
         options->port = atoi(argv[++i]); // convert string to int
       } else if (argv[i][1] == 'f') {
-        options->fPath = (char*) calloc(PATH_SIZE, sizeof(char));
-        strncpy(options->fPath, argv[++i], PATH_SIZE);
+        options->sourcePath = (char*) calloc(PATH_SIZE, sizeof(char));
+        strncpy(options->sourcePath, argv[++i], PATH_SIZE);
       } else if (argv[i][1] == 'o') {
-        options->oPath = (char*) calloc(PATH_SIZE, sizeof(char));
-        strncpy(options->oPath, argv[++i], PATH_SIZE);
+        options->targetPath = (char*) calloc(PATH_SIZE, sizeof(char));
+        strncpy(options->targetPath, argv[++i], PATH_SIZE);
       } else {
         fprintf(stderr, "Invalid option: %s\n", argv[i]);
         return NULL;
@@ -84,9 +84,15 @@ options_t* parseOptions(int argc, char* argv[]) {
       fprintf(stderr, "Missing mandatory option: -p\n");
       return NULL;
   }
-  if (options->fPath == NULL) {
+  if (options->sourcePath == NULL) {
       fprintf(stderr, "Missing mandatory option: -f\n");
       return NULL;
+  }
+
+  // if the target path is missing, then set it to the source path
+  if (options->targetPath == NULL) {
+    options->targetPath = (char*) calloc(PATH_SIZE, sizeof(char));
+    strncpy(options->targetPath, options->sourcePath, PATH_SIZE);
   }
 
   return options;
