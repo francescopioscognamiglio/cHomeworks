@@ -12,7 +12,7 @@ int createSocket() {
     return -1;
   }
 
-  printf("Socket has been created ...\n");
+  printf("[INFO] Socket has been created ...\n");
   return fd;
 }
 
@@ -23,7 +23,7 @@ int setListenMode(int fd) {
     return EXIT_FAILURE;
   }
 
-  printf("Listen mode has been set ...\n");
+  printf("[INFO] Listen mode has been set ...\n");
   return EXIT_SUCCESS;
 }
 
@@ -57,7 +57,7 @@ int prepareConnection(char* address, int port) {
     return -1;
   }
 
-  printf("The connection has been prepared ...\n");
+  printf("[INFO] The connection has been prepared ...\n");
   return fd;
 }
 
@@ -86,7 +86,7 @@ int establishConnection(char* address, int port) {
     return -1;
   }
 
-  printf("The connection has been established ...\n");
+  printf("[INFO] The connection has been established ...\n");
   return fd;
 }
 
@@ -148,7 +148,7 @@ bool sendMessage(int fd, char* buffer, int bufferSize) {
     return false;
   }
 
-  printf("Message \"%s\" has been sent ...\n", buffer);
+  printf("[INFO] Message \"%s\" has been sent ...\n", buffer);
   return true;
 }
 
@@ -159,7 +159,6 @@ bool sendCommand(int fd, char* mode, char* path) {
   strncat(buffer, ":", 2);
   strncat(buffer, path, PATH_SIZE);
 
-  printf("Sending command: %s\n", buffer);
   return sendMessage(fd, buffer, bufferSize);
 }
 
@@ -172,7 +171,7 @@ bool receiveMessage(int fd, char* buffer, int bufferSize) {
     return false;
   }
 
-  printf("Message \"%s\" has been received ...\n", buffer);
+  printf("[INFO] Message \"%s\" has been received ...\n", buffer);
   return true;
 }
 
@@ -183,7 +182,6 @@ char* receiveCommand(int fd) {
     return NULL;
   }
 
-  printf("Reading command: %s\n", buffer);
   return buffer;
 }
 

@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
       perror("Error while accepting a connection from the socket");
       exit(4);
     }
-    printf("Connection has been accepted ...\n");
+    printf("[INFO] Connection has been accepted ...\n");
 
     pid_t pid = fork();
     if (pid == -1) {
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
         perror("Error while closing the socket");
         exit(6);
       }
-      printf("Connection has been closed ...\n");
+      printf("[INFO] Connection has been closed ...\n");
     }
   }
 
@@ -88,6 +88,6 @@ int handleRequest(options_t* options, int fd) {
     exit(7);
   }
 
-  printf("Connection has been closed ...\n");
+  printf("[INFO] Connection has been closed ...\n");
   return EXIT_SUCCESS;
 }
