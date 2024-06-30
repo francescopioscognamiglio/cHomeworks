@@ -26,17 +26,10 @@ int main(int argc, char **argv) {
   int clientFd = *clientFdPtr;
 
   // build the address
-  struct sockaddr_in* serverAddress = buildAddress(clientFd, options->address, options->port);
+  struct sockaddr_in* serverAddress = connectOperation(clientFd, options->address, options->port);
   if (serverAddress == NULL) {
     exit(2);
   }
-
-  // connect to the socket (opened by the server)
-  if (connect(clientFd, (struct sockaddr*)&serverAddress, sizeof(serverAddress))) {
-    perror("Error while connecting to the socket");
-    exit(3);
-  }
-  printf("Connection has been established ...\n");
 
   char readBuffer[BUFFER_SIZE];
   memset(readBuffer, 0, sizeof(readBuffer)); // be sure that the area is cleaned

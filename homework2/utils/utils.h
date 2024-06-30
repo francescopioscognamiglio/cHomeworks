@@ -15,7 +15,8 @@
 #define PATH_SIZE 200
 
 int* createSocket();
-struct sockaddr_in* buildAddress(int listenFd, char* address, int port);
+struct sockaddr_in* bindOperation(int fd, char* address, int port);
+struct sockaddr_in* connectOperation(int fd, char* address, int port);
 
 bool isExistingDirectory(char* directory);
 bool createParentDirectories(char* directory);

@@ -15,17 +15,37 @@ int* createSocket() {
   return fdPtr;
 }
 
-struct sockaddr_in* buildAddress(int fd, char* address, int port) {
+struct sockaddr_in* bindOperation(int fd, char* address, int port) {
   struct sockaddr_in* socketAddress = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
   socketAddress->sin_family = AF_INET;
   socketAddress->sin_addr.s_addr = inet_addr(address);
   socketAddress->sin_port = htons(port);
+  // bind operation:
+  // assign an address to the socket
+  // this operation is usually performed by the server to prepare the socket to accept connections
   if (bind(fd, (struct sockaddr*)socketAddress, sizeof(*socketAddress))) {
     perror("Error while setting the address to the socket");
     return NULL;
   }
 
   printf("Address has been set ...\n");
+  return socketAddress;
+}
+
+struct sockaddr_in* connectOperation(int fd, char* address, int port) {
+  struct sockaddr_in* socketAddress = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
+  socketAddress->sin_family = AF_INET;
+  socketAddress->sin_addr.s_addr = inet_addr(address);
+  socketAddress->sin_port = htons(port);
+  // connect operation:
+  // connect to the opened socket
+  // this operation is usually performed by the client to connect to a socket opened by the server
+  if (connect(fd, (struct sockaddr*)socketAddress, sizeof(*socketAddress))) {
+    perror("Error while setting the address to the socket");
+    return NULL;
+  }
+
+  printf("Connection has been established ...\n");
   return socketAddress;
 }
 
