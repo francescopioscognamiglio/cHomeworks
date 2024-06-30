@@ -66,16 +66,24 @@ options_t* parseOptions(int argc, char* argv[]) {
 
   // check exclusive options
   if (options->isWrite && options->isRead && options->isList) {
-    fprintf(stderr, "Specify only one between write, read and list modes\n");
+    fprintf(stderr, "Specify only one between write, read and list\n");
+    return NULL;
   } if (options->isWrite && options->isRead) {
-    fprintf(stderr, "Specify only one between write and read modes\n");
+    fprintf(stderr, "Specify only one between write and read\n");
+    return NULL;
   } else if (options->isWrite && options->isList) {
-    fprintf(stderr, "Specify only one between write and list modes\n");
+    fprintf(stderr, "Specify only one between write and list\n");
+    return NULL;
   } else if (options->isRead && options->isList) {
-    fprintf(stderr, "Specify only one between read and list modes\n");
+    fprintf(stderr, "Specify only one between read and list\n");
+    return NULL;
   }
 
   // check mandatory options
+  if (!options->isWrite && !options->isRead && !options->isList) {
+    fprintf(stderr, "Missing mode: one between write, read and list\n");
+    return NULL;
+  }
   if (options->address == NULL) {
     fprintf(stderr, "Missing mandatory option: -a\n");
     return NULL;
