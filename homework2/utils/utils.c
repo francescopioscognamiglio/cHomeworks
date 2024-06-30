@@ -16,8 +16,7 @@ int* createSocket() {
 }
 
 struct sockaddr_in* buildAddress(int fd, char* address, int port) {
-  struct sockaddr_in* serverAddress;
-  memset(serverAddress, 0, sizeof(serverAddress)); // be sure that the area is cleaned
+  struct sockaddr_in* serverAddress = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
   serverAddress->sin_family = AF_INET;
   serverAddress->sin_addr.s_addr = inet_addr(address);
   serverAddress->sin_port = htons(port);
