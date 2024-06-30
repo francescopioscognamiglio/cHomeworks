@@ -20,7 +20,7 @@ struct sockaddr_in* buildAddress(int fd, char* address, int port) {
   serverAddress->sin_family = AF_INET;
   serverAddress->sin_addr.s_addr = inet_addr(address);
   serverAddress->sin_port = htons(port);
-  if (bind(fd, (struct sockaddr*)serverAddress, sizeof(serverAddress))) {
+  if (bind(fd, (struct sockaddr*)serverAddress, sizeof(*serverAddress))) {
     perror("Error while setting the address to the socket");
     return NULL;
   }
