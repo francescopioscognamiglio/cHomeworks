@@ -16,32 +16,24 @@ int main(int argc, char **argv) {
     exit(7);
   }
 
-  // create the socket
-  int* listenFdPtr = createSocket();
-  if (listenFdPtr == NULL) {
+  // prepare the connection
+  int fd = prepareConnection(options->address, options->port);
+  if (fd == -1) {
     exit(1);
-  }
-  int listenFd = *listenFdPtr;
-
-  // build the address
-  struct sockaddr_in* serverAddress = bindOperation(listenFd, options->address, options->port);
-  if (serverAddress == NULL) {
-    exit(2);
-  }
-
-  // set the listen mode
-  if (setListenMode(listenFd) == EXIT_FAILURE) {
-    exit(3);
   }
 
   while (true) {
     // accept a connection from the pending requests
-    int connectedFd = accept(listenFd, (struct sockaddr*)NULL, NULL);
+    int connectedFd = accept(fd, (struct sockaddr*)NULL, NULL);
     if (connectedFd == -1) {
       perror("Error while accepting a connection from the socket");
       exit(4);
     }
     printf("Connection has been accepted ...\n");
+
+    // TODO: read the command from the client
+    // TODO: perform the operation
+    // TODO: send the result to the client (if needed)
 
     pid_t pid = fork();
     if (pid == -1) {
@@ -61,17 +53,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  return EXIT_SUCCESS;
-}
-
-int setListenMode(int listenFd) {
-  // set passive mode (server listens) and the maximum pending requests
-  if (listen(listenFd, MAX_PENDING_REQUESTS) == -1) {
-    perror("Error while listening the socket");
-    return EXIT_FAILURE;
-  }
-
-  printf("Listen mode has been set ...\n");
   return EXIT_SUCCESS;
 }
 

@@ -2,20 +2,44 @@
 #include <sys/types.h>
 #include "utils.h"
 
-int* createSocket() {
-  int fd = socket(AF_INET, SOCK_STREAM, 0); // AF_INET is the TCP/IP protocol
-                                                  // SOCK_STREAM is the TCP transfer service
+int createSocket() {
+  // create the socket with the following parameters:
+  // - AF_INET is the TCP/IP protocol
+  // - SOCK_STREAM is the TCP transfer service
+  int fd = socket(AF_INET, SOCK_STREAM, 0);
   if (fd == -1) {
     perror("Error while opening the socket");
-    return NULL;
+    return -1;
   }
 
   printf("Socket has been created ...\n");
-  int* fdPtr = &fd;
-  return fdPtr;
+  return fd;
 }
 
-struct sockaddr_in* bindOperation(int fd, char* address, int port) {
+int setListenMode(int fd) {
+  // set the passive mode (server listens) specifying the maximum pending requests
+  if (listen(fd, MAX_PENDING_REQUESTS) == -1) {
+    perror("Error while listening the socket");
+    return EXIT_FAILURE;
+  }
+
+  printf("Listen mode has been set ...\n");
+  return EXIT_SUCCESS;
+}
+
+int prepareConnection(char* address, int port) {
+  // prepare the connection:
+  // - create the socket
+  // - assign the address to the socket
+  // - set the listening mode to accept connections from the clients
+
+  // create the socket
+  int fd = createSocket();
+  if (fd == -1) {
+    return -1;
+  }
+
+  // assign the address
   struct sockaddr_in* socketAddress = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
   socketAddress->sin_family = AF_INET;
   socketAddress->sin_addr.s_addr = inet_addr(address);
@@ -25,14 +49,31 @@ struct sockaddr_in* bindOperation(int fd, char* address, int port) {
   // this operation is usually performed by the server to prepare the socket to accept connections
   if (bind(fd, (struct sockaddr*)socketAddress, sizeof(*socketAddress))) {
     perror("Error while setting the address to the socket");
-    return NULL;
+    return -1;
   }
 
-  printf("Address has been set ...\n");
-  return socketAddress;
+  // set the listening mode
+  if (setListenMode(fd) == EXIT_FAILURE) {
+    return -1;
+  }
+
+  printf("The connection has been prepared ...\n");
+  return fd;
 }
 
-struct sockaddr_in* connectOperation(int fd, char* address, int port) {
+int establishConnection(char* address, int port) {
+  // establish the connection:
+  // - create the socket
+  // - assign the address to the socket
+  // - connect to the already opened socket
+
+  // create the socket
+  int fd = createSocket();
+  if (fd == -1) {
+    return -1;
+  }
+
+  // assign the address
   struct sockaddr_in* socketAddress = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
   socketAddress->sin_family = AF_INET;
   socketAddress->sin_addr.s_addr = inet_addr(address);
@@ -42,11 +83,11 @@ struct sockaddr_in* connectOperation(int fd, char* address, int port) {
   // this operation is usually performed by the client to connect to a socket opened by the server
   if (connect(fd, (struct sockaddr*)socketAddress, sizeof(*socketAddress))) {
     perror("Error while setting the address to the socket");
-    return NULL;
+    return -1;
   }
 
-  printf("Connection has been established ...\n");
-  return socketAddress;
+  printf("The connection has been established ...\n");
+  return fd;
 }
 
 bool isExistingDirectory(char* directory) {

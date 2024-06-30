@@ -18,25 +18,21 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  // create the socket
-  int* clientFdPtr = createSocket();
-  if (clientFdPtr == NULL) {
+  // establish the connection
+  int fd = establishConnection(options->address, options->port);
+  if (fd == -1) {
     exit(1);
   }
-  int clientFd = *clientFdPtr;
 
-  // build the address
-  struct sockaddr_in* serverAddress = connectOperation(clientFd, options->address, options->port);
-  if (serverAddress == NULL) {
-    exit(2);
-  }
+  // TODO: send the command to the server
+  // TODO: read the result from the server (if needed)
 
   char readBuffer[BUFFER_SIZE];
   memset(readBuffer, 0, sizeof(readBuffer)); // be sure that the area is cleaned
 
   // read the message from the socket
   // since I have the file descriptor, I can use the read system call instead of the recv one
-  int readBytes = read(clientFd, readBuffer, BUFFER_SIZE);
+  int readBytes = read(fd, readBuffer, BUFFER_SIZE);
   if (readBytes == -1) {
     perror("Error while reading from the socket");
     exit(4);
@@ -45,7 +41,7 @@ int main(int argc, char **argv) {
   printf("Message received from the server: %s\n", readBuffer);
 
   // close the socket
-  if (close(clientFd)) {
+  if (close(fd)) {
     perror("Error while closing the socket");
     exit(5);
   }
