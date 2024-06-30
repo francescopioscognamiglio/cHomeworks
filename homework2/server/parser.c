@@ -27,7 +27,7 @@ options_t* parseOptions(int argc, char* argv[]) {
         return NULL;
       }
       // check the option value
-      if ((i+1) >= argc || argv[i+1][0] == '\0') {
+      if ((i+1) >= argc || argv[i+1][0] == '\0' || argv[i+1][0] == '-') {
         fprintf(stderr, "Option without value: %s\n", argv[i]);
         return NULL;
       }
