@@ -16,17 +16,17 @@ int* createSocket() {
 }
 
 struct sockaddr_in* buildAddress(int fd, char* address, int port) {
-  struct sockaddr_in* serverAddress = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
-  serverAddress->sin_family = AF_INET;
-  serverAddress->sin_addr.s_addr = inet_addr(address);
-  serverAddress->sin_port = htons(port);
-  if (bind(fd, (struct sockaddr*)serverAddress, sizeof(*serverAddress))) {
+  struct sockaddr_in* socketAddress = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
+  socketAddress->sin_family = AF_INET;
+  socketAddress->sin_addr.s_addr = inet_addr(address);
+  socketAddress->sin_port = htons(port);
+  if (bind(fd, (struct sockaddr*)socketAddress, sizeof(*socketAddress))) {
     perror("Error while setting the address to the socket");
     return NULL;
   }
 
   printf("Address has been set ...\n");
-  return serverAddress;
+  return socketAddress;
 }
 
 bool isExistingDirectory(char* directory) {
