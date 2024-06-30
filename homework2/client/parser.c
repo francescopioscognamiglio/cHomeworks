@@ -66,27 +66,33 @@ options_t* parseOptions(int argc, char* argv[]) {
 
   // check exclusive options
   if (options->isWrite && options->isRead && options->isList) {
-    fprintf(stderr, "Specify only one between: -w -r -l\n");
+    fprintf(stderr, "Specify only one between write, read and list modes\n");
   } if (options->isWrite && options->isRead) {
-    fprintf(stderr, "Specify only one between: -w -r\n");
+    fprintf(stderr, "Specify only one between write and read modes\n");
   } else if (options->isWrite && options->isList) {
-    fprintf(stderr, "Specify only one between: -w -l\n");
+    fprintf(stderr, "Specify only one between write and list modes\n");
   } else if (options->isRead && options->isList) {
-    fprintf(stderr, "Specify only one between: -r -l\n");
+    fprintf(stderr, "Specify only one between read and list modes\n");
   }
 
   // check mandatory options
   if (options->address == NULL) {
-      fprintf(stderr, "Missing mandatory option: -a\n");
-      return NULL;
+    fprintf(stderr, "Missing mandatory option: -a\n");
+    return NULL;
   }
   if (options->port == -1) {
-      fprintf(stderr, "Missing mandatory option: -p\n");
-      return NULL;
+    fprintf(stderr, "Missing mandatory option: -p\n");
+    return NULL;
   }
   if (options->sourcePath == NULL) {
-      fprintf(stderr, "Missing mandatory option: -f\n");
-      return NULL;
+    fprintf(stderr, "Missing mandatory option: -f\n");
+    return NULL;
+  }
+
+  // in case of list mode, the target path is not needed
+  if (options->isList && options->targetPath != NULL) {
+    fprintf(stderr, "Extra option not needed for list mode: -o\n");
+    return NULL;
   }
 
   // if the target path is missing, then set it to the source path
