@@ -20,14 +20,14 @@ int prepareConnection(char* address, int port);
 int establishConnection(char* address, int port);
 
 bool sendMessage(int fd, char* buffer, int bufferSize);
-bool sendSize(int fd, int size);
+bool sendFileSize(int fd, int size);
 bool sendCommand(int fd, char* mode, char* path);
 bool sendFile(int fd, char* path, int size);
 bool sendDirectoryFilesNumber(int fd, char* path);
 bool sendDirectoryFiles(int fd, char* path);
 
 bool receiveMessage(int fd, char* buffer, int bufferSize);
-int receiveSize(int fd);
+int receiveFileSize(int fd);
 char* receiveCommand(int fd);
 bool receiveFile(int fd, char* path, int size);
 int receiveDirectoryFilesNumber(int fd);

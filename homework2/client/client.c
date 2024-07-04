@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     if (size == -1) {
       exit(5);
     }
-    if (!sendSize(fd, size)) {
+    if (!sendFileSize(fd, size)) {
       exit(6);
     }
     // 3. send the binary file
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
       exit(7);
     }
     // 3. receive the number of bytes of the file (file size)
-    int size = receiveSize(fd);
+    int size = receiveFileSize(fd);
     if (size == -1) {
       exit(6);
     }

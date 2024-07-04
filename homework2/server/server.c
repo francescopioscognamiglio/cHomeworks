@@ -74,7 +74,7 @@ int handleRequest(options_t* options, int fd) {
       exit(7);
     }
     // 2. receive the number of bytes of the file (file size)
-    int size = receiveSize(fd);
+    int size = receiveFileSize(fd);
     if (size == -1) {
       exit(6);
     }
@@ -89,7 +89,7 @@ int handleRequest(options_t* options, int fd) {
     if (size == -1) {
       exit(5);
     }
-    if (!sendSize(fd, size)) {
+    if (!sendFileSize(fd, size)) {
       exit(6);
     }
     // 2. send the binary file

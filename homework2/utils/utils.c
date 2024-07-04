@@ -168,15 +168,15 @@ bool sendMessage(int fd, char* buffer, int bufferSize) {
   return true;
 }
 
-bool sendSize(int fd, int size) {
-  // send the size to the socket
+bool sendFileSize(int fd, int size) {
+  // send the file size to the socket
   // having the file descriptor, it's possible to use the write system call
   if (write(fd, &size, sizeof(int)) == -1) {
-    perror("Error while writing the size to the socket");
+    perror("Error while writing the file size to the socket");
     return false;
   }
 
-  printf("[INFO] Size \"%d\" has been sent ...\n", size);
+  printf("[INFO] File size \"%d\" has been sent ...\n", size);
   return true;
 }
 
@@ -302,21 +302,21 @@ bool receiveMessage(int fd, char* buffer, int bufferSize) {
   return true;
 }
 
-int receiveSize(int fd) {
-  // read the size from the socket
+int receiveFileSize(int fd) {
+  // read the file size from the socket
   // having the file descriptor, it's possible to use the read system call
   int size = -1;
   int readBytes = read(fd, &size, sizeof(int));
   if (readBytes == -1) {
-    perror("Error while reading the size from the socket");
+    perror("Error while reading the file size from the socket");
     return -1;
   }
 
   if (size == -1) {
-    fprintf(stderr, "The size of the file is unknown\n");
+    fprintf(stderr, "The file size is unknown\n");
   }
 
-  printf("[INFO] Size \"%d\" has been received ...\n", size);
+  printf("[INFO] File size \"%d\" has been received ...\n", size);
   return size;
 }
 
