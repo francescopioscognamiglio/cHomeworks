@@ -40,6 +40,9 @@ int main(int argc, char **argv) {
       exit(6);
     }
     // 3. send the binary file
+    if (!sendFile(fd, options->sourcePath, size)) {
+      exit(7);
+    }
     // 4. (optional) receive if the operation is successful
   } else if (options->isRead) {
     // 2. read a file from the server:

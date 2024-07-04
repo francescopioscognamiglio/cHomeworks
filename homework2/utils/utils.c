@@ -90,7 +90,7 @@ int establishConnection(char* address, int port) {
   return fd;
 }
 
-bool isExistingDirectory(char* directory) {
+bool isExistingFile(char* directory) {
   // check if the directory exists
   if (fopen(directory, "r") == NULL) {
     return false;
@@ -100,7 +100,7 @@ bool isExistingDirectory(char* directory) {
 
 bool createParentDirectories(char* directory) {
   // if the directory exists nothing to do
-  if (isExistingDirectory(directory)) {
+  if (isExistingFile(directory)) {
     return true;
   }
 
@@ -117,7 +117,7 @@ bool createParentDirectories(char* directory) {
       strncpy(directoryToCreate, directory, i);
       directoryToCreate[i] = '\0'; // add string termination character
       // check if the directory already exists
-      if (!isExistingDirectory(directoryToCreate)) {
+      if (!isExistingFile(directoryToCreate)) {
         // create the directory
         if (!createDirectory(directoryToCreate)) {
           return false;
@@ -174,6 +174,31 @@ bool sendCommand(int fd, char* mode, char* path) {
   return sendMessage(fd, buffer, bufferSize);
 }
 
+bool sendFile(int fd, char* path, int size) {
+  char* buffer = calloc(1, size);
+
+  // open the file
+  int readFd = open(path, O_RDONLY);
+  if (readFd == -1) {
+    perror("Error while opening the file");
+    return false;
+  }
+
+  // read the file
+  int readBytes = read(readFd, buffer, size);
+  if (readBytes == -1) {
+    perror("Error while reading the file");
+    return false;
+  }
+
+  // send the file to the socket
+  if (!sendMessage(fd, buffer, size)) {
+    return false;
+  }
+
+  return true;
+}
+
 bool receiveMessage(int fd, char* buffer, int bufferSize) {
   // read the message from the socket
   // having the file descriptor, it's possible to use the read system call
@@ -211,6 +236,38 @@ char* receiveCommand(int fd) {
   return buffer;
 }
 
+bool receiveFile(int fd, char* path, int size) {
+  char* buffer = calloc(1, size);
+
+  // receive the file from the socket
+  if (!receiveMessage(fd, buffer, size)) {
+    return false;
+  }
+
+  // check if the file exists
+  if (access(path, F_OK) == 0) {
+    fprintf(stderr, "The file %s already exists\n", path);
+    return false;
+  }
+
+  // open the file
+  // create it with O_CREAT flag
+  // set the read, write and execute permissions to the owner
+  int writeFd = open(path, O_WRONLY | O_CREAT, S_IRWXU);
+  if (writeFd == -1) {
+    perror("Error while opening the file");
+    return false;
+  }
+
+  // write the file
+  if (write(writeFd, buffer, size) == -1) {
+    perror("Error while writing the file");
+    return false;
+  }
+
+  return true;
+}
+
 int getIndexOfLastFileSeparator(char* command) {
   // retrieve the last file separator '/' in order to skip the file name
   int lastFileSeparator = -1;
@@ -221,6 +278,25 @@ int getIndexOfLastFileSeparator(char* command) {
   }
 
   return lastFileSeparator;
+}
+
+char* getPath(char* command, char* rootPath) {
+  char* path = calloc(1, PATH_SIZE*2);
+
+  // the first character is the mode, so skip it
+  // the second character is the separator ':', so skip it
+  // the path starts from the third character
+  char* pathToCopy = &command[2];
+
+  // build the absolute path:
+  // append the root path
+  strncpy(path, rootPath, PATH_SIZE);
+  // append a file separator
+  strncat(path, "/", 2);
+  // append the extracted path
+  strncat(path, pathToCopy, PATH_SIZE);
+
+  return path;
 }
 
 char* getPathWithoutFileName(char* command, char* rootPath) {

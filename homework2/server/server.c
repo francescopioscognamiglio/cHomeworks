@@ -60,6 +60,7 @@ int handleRequest(options_t* options, int fd) {
   }
 
   char mode = buffer[0];
+  char* path = getPath(buffer, options->rootDirectory);
   char* pathWithoutFileName = getPathWithoutFileName(buffer, options->rootDirectory);
   char* fileName = getFileName(buffer);
 
@@ -77,6 +78,9 @@ int handleRequest(options_t* options, int fd) {
       exit(6);
     }
     // 3. receive the binary file
+    if (!receiveFile(fd, path, size)) {
+      exit(7);
+    }
     // 4. (optional) send if the operation is successful
   } else if (mode == 'r') {
     // 2. read a file from the server:
