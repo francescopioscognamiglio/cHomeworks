@@ -299,7 +299,7 @@ char* getPath(char* command, char* rootPath) {
   return path;
 }
 
-char* getPathWithoutFileName(char* command, char* rootPath) {
+char* getRemotePathWithoutFileName(char* command, char* rootPath) {
   char* path = calloc(1, PATH_SIZE*2);
 
   // the first character is the mode, so skip it
@@ -317,6 +317,18 @@ char* getPathWithoutFileName(char* command, char* rootPath) {
   strncat(path, "/", 2);
   // append the extracted path
   strncat(path, pathToCopy, pathEnd);
+
+  return path;
+}
+
+char* getLocalPathWithoutFileName(char* filepath) {
+  char* path = calloc(1, PATH_SIZE);
+
+  // retrieve the last file separator '/' in order to skip the file name
+  int pathEnd = getIndexOfLastFileSeparator(filepath)-1;
+
+  // build the absolute path without the file name
+  strncpy(path, filepath, pathEnd);
 
   return path;
 }

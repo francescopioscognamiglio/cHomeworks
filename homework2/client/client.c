@@ -43,22 +43,34 @@ int main(int argc, char **argv) {
     if (!sendFile(fd, options->sourcePath, size)) {
       exit(7);
     }
-    // 4. (optional) receive if the operation is successful
   } else if (options->isRead) {
-    // 2. read a file from the server:
-    //    - send the read command and the file path to read
+    // read a file from the server:
+    // 1. send the read command and the file path to be read
     if (!sendCommand(fd, "r", options->sourcePath)) {
       exit(4);
     }
-    //    - receive the bytes of the file
-    //    - write the file to the file path
+    // 2. create the directories of the file path if missing
+    char* pathWithoutFileName = getLocalPathWithoutFileName(options->targetPath);
+    if (!createParentDirectories(pathWithoutFileName)) {
+      perror("Error while creating the directory");
+      exit(7);
+    }
+    // 3. receive the number of bytes of the file (file size)
+    int size = receiveSize(fd);
+    if (size == -1) {
+      exit(6);
+    }
+    // 4. receive the binary file
+    if (!receiveFile(fd, options->targetPath, size)) {
+      exit(7);
+    }
   } else if (options->isList) {
-    // 3. read directories/files from the server:
-    //    - send the list command
+    // read directories/files from the server:
+    // 1. send the list command
     if (!sendCommand(fd, "l", options->sourcePath)) {
       exit(4);
     }
-    //    - receive the list of directories/files into the file path as bytes
+    // 2. receive the list of directories/files into the file path as bytes
   }
 
   // close the socket

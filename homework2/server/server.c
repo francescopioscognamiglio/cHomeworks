@@ -59,9 +59,10 @@ int handleRequest(options_t* options, int fd) {
     exit(4);
   }
 
+  // read the mode and the file path
   char mode = buffer[0];
   char* path = getPath(buffer, options->rootDirectory);
-  char* pathWithoutFileName = getPathWithoutFileName(buffer, options->rootDirectory);
+  char* pathWithoutFileName = getRemotePathWithoutFileName(buffer, options->rootDirectory);
   char* fileName = getFileName(buffer);
 
   // TODO: server side:
@@ -81,15 +82,23 @@ int handleRequest(options_t* options, int fd) {
     if (!receiveFile(fd, path, size)) {
       exit(7);
     }
-    // 4. (optional) send if the operation is successful
   } else if (mode == 'r') {
-    // 2. read a file from the server:
-    //    - receive the read command and the file path to read
-    //    - send the bytes of the file
+    // read a file from the server:
+    // 1. send the number of bytes of the file (file size)
+    int size = getFileSize(path);
+    if (size == -1) {
+      exit(5);
+    }
+    if (!sendSize(fd, size)) {
+      exit(6);
+    }
+    // 2. send the binary file
+    if (!sendFile(fd, path, size)) {
+      exit(7);
+    }
   } else if (mode == 'l') {
-    // 3. read directories/files from the server:
-    //    - receive the list command and the file path to list
-    //    - send the list of directories/files into the file path as bytes
+    // read directories/files from the server:
+    // 1. send the list of directories/files into the file path as bytes
   }
 
   // close the socket

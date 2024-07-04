@@ -34,6 +34,7 @@ bool createParentDirectories(char* directory);
 bool createDirectory(char* directory);
 
 char* getPath(char* command, char* rootPath);
-char* getPathWithoutFileName(char* command, char* rootPath);
+char* getRemotePathWithoutFileName(char* command, char* rootPath);
+char* getLocalPathWithoutFileName(char* filepath);
 char* getFileName(char* command);
 int getFileSize(char* path);
