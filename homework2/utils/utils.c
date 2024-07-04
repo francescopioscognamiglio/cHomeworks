@@ -144,11 +144,23 @@ bool sendMessage(int fd, char* buffer, int bufferSize) {
   // send the message to the socket
   // having the file descriptor, it's possible to use the write system call
   if (write(fd, buffer, bufferSize) == -1) {
-    perror("Error while writing to the socket");
+    perror("Error while writing the message to the socket");
     return false;
   }
 
   printf("[INFO] Message \"%s\" has been sent ...\n", buffer);
+  return true;
+}
+
+bool sendSize(int fd, int size) {
+  // send the size to the socket
+  // having the file descriptor, it's possible to use the write system call
+  if (write(fd, &size, sizeof(int)) == -1) {
+    perror("Error while writing the size to the socket");
+    return false;
+  }
+
+  printf("[INFO] Size \"%d\" has been sent ...\n", size);
   return true;
 }
 
@@ -167,12 +179,26 @@ bool receiveMessage(int fd, char* buffer, int bufferSize) {
   // having the file descriptor, it's possible to use the read system call
   int readBytes = read(fd, buffer, bufferSize);
   if (readBytes == -1) {
-    perror("Error while reading from the socket");
+    perror("Error while reading the message from the socket");
     return false;
   }
 
   printf("[INFO] Message \"%s\" has been received ...\n", buffer);
   return true;
+}
+
+int receiveSize(int fd) {
+  // read the size from the socket
+  // having the file descriptor, it's possible to use the read system call
+  int size = -1;
+  int readBytes = read(fd, &size, sizeof(int));
+  if (readBytes == -1) {
+    perror("Error while reading the size from the socket");
+    return -1;
+  }
+
+  printf("[INFO] Size \"%d\" has been received ...\n", size);
+  return size;
 }
 
 char* receiveCommand(int fd) {
@@ -230,4 +256,15 @@ char* getFileName(char* command) {
   strncpy(fileName, fileNameToCopy, FILENAME_SIZE);
 
   return fileName;
+}
+
+int getFileSize(char* path) {
+  struct stat st;
+  if (stat(path, &st) == 0) {
+    return st.st_size;
+  }
+
+  fprintf(stderr, "Error while reading the size of the file %s\n", path);
+  perror("Error");
+  return -1;
 }

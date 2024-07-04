@@ -26,13 +26,21 @@ int main(int argc, char **argv) {
 
   // TODO: client side:
   if (options->isWrite) {
-    // 1. write a file to the server:
-    //    - send the write command and the file path to be created
+    // write a file to the server:
+    // 1. send the write command and the file path to be created
     if (!sendCommand(fd, "w", options->targetPath)) {
       exit(4);
     }
-    //    - send the bytes of the file
-    //    - (optional) receive if the operation is successful
+    // 2. send the number of bytes of the file (file size)
+    int size = getFileSize(options->sourcePath);
+    if (size == -1) {
+      exit(5);
+    }
+    if (!sendSize(fd, size)) {
+      exit(6);
+    }
+    // 3. send the binary file
+    // 4. (optional) receive if the operation is successful
   } else if (options->isRead) {
     // 2. read a file from the server:
     //    - send the read command and the file path to read

@@ -63,15 +63,21 @@ int handleRequest(options_t* options, int fd) {
   char* pathWithoutFileName = getPathWithoutFileName(buffer, options->rootDirectory);
   char* fileName = getFileName(buffer);
 
+  // TODO: server side:
   if (mode == 'w') {
-    // 1. write a file to the server:
-    //    - create the directories of the file path if missing
+    // write a file to the server:
+    // 1. create the directories of the file path if missing
     if (!createParentDirectories(pathWithoutFileName)) {
-      perror("Error while creating root directory");
+      perror("Error while creating the directory");
       exit(7);
     }
-    //    - receive the bytes of the file
-    //    - (optional) send if the operation is successful
+    // 2. receive the number of bytes of the file (file size)
+    int size = receiveSize(fd);
+    if (size == -1) {
+      exit(6);
+    }
+    // 3. receive the binary file
+    // 4. (optional) send if the operation is successful
   } else if (mode == 'r') {
     // 2. read a file from the server:
     //    - receive the read command and the file path to read
