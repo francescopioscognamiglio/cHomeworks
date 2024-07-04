@@ -70,7 +70,15 @@ int main(int argc, char **argv) {
     if (!sendCommand(fd, "l", options->sourcePath)) {
       exit(4);
     }
-    // 2. receive the list of directories/files into the file path as bytes
+    // 2. receive the number of files in the directory
+    int size = receiveDirectoryFilesNumber(fd);
+    if (size == -1) {
+      exit(6);
+    }
+    // 3. receive the files in the directory
+    if (!receiveDirectoryFiles(fd, options->sourcePath, size)) {
+      exit(7);
+    }
   }
 
   // close the socket

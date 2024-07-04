@@ -1,5 +1,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
 #include "utils.h"
 
 int createSocket() {
@@ -93,6 +94,21 @@ int establishConnection(char* address, int port) {
 bool isExistingFile(char* directory) {
   // check if the directory exists
   if (fopen(directory, "r") == NULL) {
+    return false;
+  }
+  return true;
+}
+
+bool isDirectory(char* path) {
+  struct stat pathStat;
+  // retrieve stats on path
+  if (stat(path, &pathStat) == -1) {
+    perror("Error while opening the path");
+    return false;
+  }
+  // check if it's a directory
+  if (!S_ISDIR(pathStat.st_mode)) {
+    fprintf(stderr, "The path %s is not a directory\n", path);
     return false;
   }
   return true;
@@ -199,6 +215,80 @@ bool sendFile(int fd, char* path, int size) {
   return true;
 }
 
+int getDirectoryFilesNumber(char* path) {
+  // check if the path is a directory
+  if (!isDirectory(path)) {
+    return -1;
+  }
+
+  // open the directory
+  DIR* dir = opendir(path);
+  if (dir == NULL) {
+    perror("Error while opening the directory");
+    return -1;
+  }
+
+  // read number of files in the directory
+  int filesNumber = 0;
+  struct dirent* file;
+  while (file = readdir(dir)) {
+    // skip current and parent directories
+    if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) {
+      continue;
+    }
+    filesNumber++;
+  }
+
+  return filesNumber;
+}
+
+bool sendDirectoryFilesNumber(int fd, char* path) {
+  int filesNumber = getDirectoryFilesNumber(path);
+  if (filesNumber == -1) {
+    return false;
+  }
+
+  // send the number of files to the socket
+  // having the file descriptor, it's possible to use the write system call
+  if (write(fd, &filesNumber, sizeof(int)) == -1) {
+    perror("Error while writing the number of files to the socket");
+    return false;
+  }
+
+  printf("[INFO] Number of files \"%d\" has been sent ...\n", filesNumber);
+  return true;
+}
+
+bool sendDirectoryFiles(int fd, char* path) {
+  // check if the path is a directory
+  if (!isDirectory(path)) {
+    return false;
+  }
+
+  // open the directory
+  DIR* dir = opendir(path);
+  if (dir == NULL) {
+    perror("Error while opening the directory");
+  }
+
+  // read and send each file in the directory
+  struct dirent* file;
+  while (file = readdir(dir)) {
+    // skip current and parent directories
+    if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) {
+      continue;
+    }
+    // send the file to the socket
+    char* buffer = calloc(1, FILENAME_SIZE);
+    strncpy(buffer, file->d_name, FILENAME_SIZE);
+    if (!sendMessage(fd, buffer, FILENAME_SIZE)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool receiveMessage(int fd, char* buffer, int bufferSize) {
   // read the message from the socket
   // having the file descriptor, it's possible to use the read system call
@@ -220,6 +310,10 @@ int receiveSize(int fd) {
   if (readBytes == -1) {
     perror("Error while reading the size from the socket");
     return -1;
+  }
+
+  if (size == -1) {
+    fprintf(stderr, "The size of the file is unknown\n");
   }
 
   printf("[INFO] Size \"%d\" has been received ...\n", size);
@@ -263,6 +357,44 @@ bool receiveFile(int fd, char* path, int size) {
   if (write(writeFd, buffer, size) == -1) {
     perror("Error while writing the file");
     return false;
+  }
+
+  return true;
+}
+
+int receiveDirectoryFilesNumber(int fd) {
+  // read the number of files from the socket
+  // having the file descriptor, it's possible to use the read system call
+  int filesNumber = -1;
+  int readBytes = read(fd, &filesNumber, sizeof(int));
+  if (readBytes == -1) {
+    perror("Error while reading the number of files from the socket");
+    return -1;
+  }
+
+  if (filesNumber == -1) {
+    fprintf(stderr, "The number of files is unknown\n");
+  }
+
+  printf("[INFO] Number of files \"%d\" has been received ...\n", filesNumber);
+  return filesNumber;
+}
+
+bool receiveDirectoryFiles(int fd, char* path, int filesNumber) {
+  if (filesNumber == -1) {
+    printf("The directory %s is empty\n", path);
+    return true;
+  }
+
+  // iterate the number of files
+  printf("The content of the directory %s is:\n", path);
+  for (int i = 0; i < filesNumber; i++) {
+    // receive the file name from the socket
+    char* buffer = calloc(1, FILENAME_SIZE);
+    if (!receiveMessage(fd, buffer, FILENAME_SIZE)) {
+      return false;
+    }
+    printf("\t%s\n", buffer);
   }
 
   return true;

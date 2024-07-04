@@ -98,7 +98,18 @@ int handleRequest(options_t* options, int fd) {
     }
   } else if (mode == 'l') {
     // read directories/files from the server:
-    // 1. send the list of directories/files into the file path as bytes
+    // 1. send the number of files in the directory
+    int filesNumber = getDirectoryFilesNumber(path);
+    if (filesNumber == -1) {
+      exit(5);
+    }
+    if (!sendDirectoryFilesNumber(fd, path)) {
+      exit(6);
+    }
+    // 2. send the files in the directory
+    if (!sendDirectoryFiles(fd, path)) {
+      exit(7);
+    }
   }
 
   // close the socket

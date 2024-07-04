@@ -23,13 +23,18 @@ bool sendMessage(int fd, char* buffer, int bufferSize);
 bool sendSize(int fd, int size);
 bool sendCommand(int fd, char* mode, char* path);
 bool sendFile(int fd, char* path, int size);
+bool sendDirectoryFilesNumber(int fd, char* path);
+bool sendDirectoryFiles(int fd, char* path);
 
 bool receiveMessage(int fd, char* buffer, int bufferSize);
 int receiveSize(int fd);
 char* receiveCommand(int fd);
 bool receiveFile(int fd, char* path, int size);
+int receiveDirectoryFilesNumber(int fd);
+bool receiveDirectoryFiles(int fd, char* path, int filesNumber);
 
 bool isExistingFile(char* directory);
+bool isDirectory(char* path);
 bool createParentDirectories(char* directory);
 bool createDirectory(char* directory);
 
@@ -38,3 +43,4 @@ char* getRemotePathWithoutFileName(char* command, char* rootPath);
 char* getLocalPathWithoutFileName(char* filepath);
 char* getFileName(char* command);
 int getFileSize(char* path);
+int getDirectoryFilesNumber(char* path);
