@@ -331,13 +331,6 @@ char* receiveCommand(int fd) {
 }
 
 bool receiveFile(int fd, char* path, int size) {
-  char* buffer = calloc(1, size);
-
-  // receive the file from the socket
-  if (!receiveMessage(fd, buffer, size)) {
-    return false;
-  }
-
   // check if the file exists
   if (access(path, F_OK) == 0) {
     fprintf(stderr, "The file %s already exists\n", path);
@@ -346,19 +339,48 @@ bool receiveFile(int fd, char* path, int size) {
 
   // open the file
   // create it with O_CREAT flag
+  // if already exists, write at the end of the file
   // set the read, write and execute permissions to the owner
-  int writeFd = open(path, O_WRONLY | O_CREAT, S_IRWXU);
+  int writeFd = open(path, O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
   if (writeFd == -1) {
     perror("Error while opening the file");
     return false;
   }
 
-  // write the file
-  if (write(writeFd, buffer, size) == -1) {
-    perror("Error while writing the file");
+  // read the entire file from the socket
+  int totalReadBytes = 0;
+  do {
+    // allocate the space for the buffer
+    char* buffer = calloc(1, size);
+
+    // having the file descriptor, it's possible to use the read system call
+    int readBytes = read(fd, buffer, size);
+    if (readBytes == -1) {
+      perror("Error while reading the file from the socket");
+      return false;
+    }
+
+    printf("[INFO] Read \"%d\" bytes of the file ...\n", readBytes);
+
+    // write the file
+    if (write(writeFd, buffer, readBytes) == -1) {
+      perror("Error while writing the file");
+      return false;
+    }
+
+    // clean the space allocated for the buffer
+    free(buffer);
+
+    totalReadBytes += readBytes;
+  } while ((size - totalReadBytes) > 0);
+
+  // close the file
+  if (close(writeFd) == -1) {
+    perror("Error while closing the file");
     return false;
   }
 
+  printf("[INFO] File with size \"%d\" has been received ...\n", size);
   return true;
 }
 
