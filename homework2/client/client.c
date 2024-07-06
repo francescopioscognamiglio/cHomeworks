@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  // TODO: client side:
+  // client logic
   if (options->isWrite) {
     // write a file to the server:
     // 1. send the write command and the file path to be created

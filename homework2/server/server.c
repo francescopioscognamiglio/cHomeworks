@@ -65,7 +65,7 @@ int handleRequest(options_t* options, int fd) {
   char* pathWithoutFileName = getRemotePathWithoutFileName(buffer, options->rootDirectory);
   char* fileName = getFileName(buffer);
 
-  // TODO: server side:
+  // server logic
   if (mode == 'w') {
     // write a file to the server:
     // 1. create the directories of the file path if missing
