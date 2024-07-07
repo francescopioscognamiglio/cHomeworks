@@ -5,9 +5,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h> // useful to use htonl and htons
+#include <netdb.h> // useful to use gethostbyname
 #include "../utils/utils.h"
+#include "../connection/connection.h"
+#include "parser.h"
 
 int setListenMode(int listenFd);
 int handleConnection(int connectedFd);

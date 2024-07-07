@@ -5,8 +5,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h> // useful to use htonl and htons
+#include <pthread.h>
+#include <sys/mman.h>
 #include "../utils/utils.h"
+#include "../connection/connection.h"
+#include "parser.h"
 
 int handleRequest(options_t* options, int fd);

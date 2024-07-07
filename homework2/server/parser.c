@@ -1,6 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include "../utils/utils.h"
 #include "parser.h"
 
 options_t* parseOptions(int argc, char* argv[]) {

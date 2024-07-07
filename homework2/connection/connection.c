@@ -10,7 +10,7 @@ int createSocket() {
     return -1;
   }
 
-  //printf("[INFO] Socket has been created ...\n");
+  printf("[INFO] Socket has been created ...\n");
   return fd;
 }
 
@@ -21,7 +21,7 @@ int setListenMode(int fd) {
     return -1;
   }
 
-  //printf("[INFO] Listen mode has been set ...\n");
+  printf("[INFO] Listen mode has been set ...\n");
   return 0;
 }
 
@@ -55,7 +55,7 @@ int prepareConnection(char* address, int port) {
     return -1;
   }
 
-  //printf("[INFO] The connection has been prepared ...\n");
+  printf("[INFO] The connection has been prepared ...\n");
   return fd;
 }
 
@@ -84,6 +84,6 @@ int establishConnection(char* address, int port) {
     return -1;
   }
 
-  //printf("[INFO] The connection has been established ...\n");
+  printf("[INFO] The connection has been established ...\n");
   return fd;
 }

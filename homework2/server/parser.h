@@ -1,3 +1,7 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include "../utils/utils.h"
+#include "../connection/connection.h"
 
 typedef struct {
   char* address;

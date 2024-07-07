@@ -1,13 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h> // useful to use htonl and htons
-#include <netdb.h> // useful to use gethostbyname
-#include "parser.h"
 #include "client.h"
 
 int main(int argc, char **argv) {
