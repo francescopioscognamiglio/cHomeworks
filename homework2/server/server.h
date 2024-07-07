@@ -9,6 +9,8 @@
 #include <sys/mman.h>
 #include "../utils/utils.h"
 #include "../connection/connection.h"
+#include "../sender/sender.h"
+#include "../receiver/receiver.h"
 #include "parser.h"
 
 int handleRequest(options_t* options, int fd);

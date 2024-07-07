@@ -8,6 +8,8 @@
 #include <netdb.h> // useful to use gethostbyname
 #include "../utils/utils.h"
 #include "../connection/connection.h"
+#include "../sender/sender.h"
+#include "../receiver/receiver.h"
 #include "parser.h"
 
 int setListenMode(int listenFd);
