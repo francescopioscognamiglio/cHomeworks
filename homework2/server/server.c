@@ -41,14 +41,12 @@ int main(int argc, char **argv) {
     int connectedFd = accept(fd, (struct sockaddr*)NULL, NULL);
     if (connectedFd == -1) {
       perror("Error while accepting a connection from the socket");
-      exit(4);
     }
     printf("[INFO] Connection has been accepted ...\n");
 
     pid_t pid = fork();
     if (pid == -1) {
       perror("Error while creating the child process");
-      exit(5);
     }
     if (pid == 0) {
       // child process
@@ -57,7 +55,6 @@ int main(int argc, char **argv) {
       // parent process
       if (close(connectedFd)) {
         perror("Error while closing the socket");
-        exit(6);
       }
       printf("[INFO] Connection has been closed ...\n");
     }
