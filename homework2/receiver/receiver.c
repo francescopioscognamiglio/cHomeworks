@@ -53,6 +53,16 @@ bool receiveFile(int fd, char* path, int size) {
     return false;
   }
 
+
+  // implement mutual exclusion on file
+
+  // place an exclusive lock
+  int status = flock(writeFd, LOCK_EX);
+
+  // start critical section
+
+  printf("[INFO] entering in the critical section for \"%s\" ...\n", path);
+
   // read the entire file from the socket
   int totalReadBytes = 0;
   do {
@@ -79,6 +89,13 @@ bool receiveFile(int fd, char* path, int size) {
 
     totalReadBytes += readBytes;
   } while ((size - totalReadBytes) > 0);
+
+  printf("[INFO] exit from the critical section for \"%s\" .\n", path);
+
+  // remove the exclusive lock
+  flock(writeFd, LOCK_UN);
+
+  // end critical section
 
   // close the file
   if (close(writeFd) == -1) {

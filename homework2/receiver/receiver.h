@@ -1,4 +1,5 @@
 #include "../utils/utils.h"
+#include <sys/file.h>
 
 bool receiveMessage(int fd, char* buffer, int bufferSize);
 int receiveFileSize(int fd);

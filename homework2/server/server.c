@@ -1,11 +1,5 @@
 #include "server.h"
 
-typedef struct {
-  pthread_mutex_t mutex;
-} data;
-
-static data* sharedData = NULL;
-
 int main(int argc, char **argv) {
 
   // read options
@@ -25,16 +19,6 @@ int main(int argc, char **argv) {
   if (fd == -1) {
     exit(1);
   }
-
-  // place the mutex in shared memory
-  int prot = PROT_READ | PROT_WRITE;
-  int flags = MAP_SHARED | MAP_ANONYMOUS;
-  sharedData = mmap(NULL, sizeof(data), prot, flags, -1, 0);
-
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
-  pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-  pthread_mutex_init(&sharedData->mutex, &attr);
 
   while (true) {
     // accept a connection from the pending requests
@@ -114,24 +98,9 @@ int writeOperation(int fd, char* path, char* pathWithoutFileName) {
   }
 
   // 3. receive the binary file
-
-  // TODO: check if the file has been already requested
-  // - if yes, apply the mutual exclusion
-  // - otherwise go on without mutex
-
-  // FIXME: apply the mutex logic if and only if the file path is the same
-  // lock the mutex to avoid race condition
-  // and so to implement mutual exclusion
-  pthread_mutex_lock(&sharedData->mutex);
-  // start critical section
-  printf("%d enters in the critical section\n", fd);
   if (!receiveFile(fd, path, size)) {
     return 7;
   }
-  printf("%d exits from the critical section\n", fd);
-  // unlock the mutex so other threads can enter the critical section
-  pthread_mutex_unlock(&sharedData->mutex);
-  // end critical section
 
   return EXIT_SUCCESS;
 }
