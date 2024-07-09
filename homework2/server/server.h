@@ -14,3 +14,6 @@
 #include "parser.h"
 
 int handleRequest(options_t* options, int fd);
+int writeOperation(int fd, char* path, char* pathWithoutFileName);
+int readOperation(int fd, char* path);
+int listOperation(int fd, char* path);

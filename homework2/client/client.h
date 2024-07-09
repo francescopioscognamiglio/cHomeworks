@@ -12,5 +12,6 @@
 #include "../receiver/receiver.h"
 #include "parser.h"
 
-int setListenMode(int listenFd);
-int handleConnection(int connectedFd);
+int writeOperation(int fd, char* sourcePath, char* targetPath);
+int readOperation(int fd, char* sourcePath, char* targetPath);
+int listOperation(int fd, char* sourcePath);

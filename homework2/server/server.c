@@ -78,59 +78,14 @@ int handleRequest(options_t* options, int fd) {
 
   // server logic
   if (mode == 'w') {
-    // write a file to the server:
-    // 1. create the directories of the file path if missing
-    if (!createParentDirectories(pathWithoutFileName)) {
-      perror("Error while creating the directory");
-      exit(7);
-    }
-    // 2. receive the number of bytes of the file (file size)
-    int size = receiveFileSize(fd);
-    if (size == -1) {
-      exit(6);
-    }
-    // 3. receive the binary file
-    // FIXME: apply the mutex logic if and only if the file path is the same
-    // lock the mutex to avoid race condition
-    // and so to implement mutual exclusion
-    pthread_mutex_lock(&sharedData->mutex);
-    // start critical section
-    printf("%d enters in the critical section\n", fd);
-    if (!receiveFile(fd, path, size)) {
-      exit(7);
-    }
-    printf("%d exits from the critical section\n", fd);
-    // unlock the mutex so other threads can enter the critical section
-    pthread_mutex_unlock(&sharedData->mutex);
-    // end critical section
+    // write a file to the server
+    writeOperation(fd, path, pathWithoutFileName);
   } else if (mode == 'r') {
-    // read a file from the server:
-    // 1. send the number of bytes of the file (file size)
-    int size = getFileSize(path);
-    if (size == -1) {
-      exit(5);
-    }
-    if (!sendFileSize(fd, size)) {
-      exit(6);
-    }
-    // 2. send the binary file
-    if (!sendFile(fd, path, size)) {
-      exit(7);
-    }
+    // read a file from the server
+    readOperation(fd, path);
   } else if (mode == 'l') {
-    // read directories/files from the server:
-    // 1. send the number of files in the directory
-    int filesNumber = getDirectoryFilesNumber(path);
-    if (filesNumber == -1) {
-      exit(5);
-    }
-    if (!sendDirectoryFilesNumber(fd, path)) {
-      exit(6);
-    }
-    // 2. send the files in the directory
-    if (!sendDirectoryFiles(fd, path)) {
-      exit(7);
-    }
+    // read directories/files from the server
+    listOperation(fd, path);
   }
 
   // close the socket
@@ -140,5 +95,83 @@ int handleRequest(options_t* options, int fd) {
   }
 
   printf("[INFO] Connection has been closed ...\n");
+  return EXIT_SUCCESS;
+}
+
+int writeOperation(int fd, char* path, char* pathWithoutFileName) {
+  // write a file to the server
+
+  // 1. create the directories of the file path if missing
+  if (!createParentDirectories(pathWithoutFileName)) {
+    perror("Error while creating the directory");
+    return 5;
+  }
+
+  // 2. receive the number of bytes of the file (file size)
+  int size = receiveFileSize(fd);
+  if (size == -1) {
+    return 6;
+  }
+
+  // 3. receive the binary file
+
+  // TODO: check if the file has been already requested
+  // - if yes, apply the mutual exclusion
+  // - otherwise go on without mutex
+
+  // FIXME: apply the mutex logic if and only if the file path is the same
+  // lock the mutex to avoid race condition
+  // and so to implement mutual exclusion
+  pthread_mutex_lock(&sharedData->mutex);
+  // start critical section
+  printf("%d enters in the critical section\n", fd);
+  if (!receiveFile(fd, path, size)) {
+    return 7;
+  }
+  printf("%d exits from the critical section\n", fd);
+  // unlock the mutex so other threads can enter the critical section
+  pthread_mutex_unlock(&sharedData->mutex);
+  // end critical section
+
+  return EXIT_SUCCESS;
+}
+
+int readOperation(int fd, char* path) {
+  // read a file from the server
+
+  // 1. send the number of bytes of the file (file size)
+  int size = getFileSize(path);
+  if (size == -1) {
+    return 5;
+  }
+  if (!sendFileSize(fd, size)) {
+    return 6;
+  }
+
+  // 2. send the binary file
+  if (!sendFile(fd, path, size)) {
+    return 7;
+  }
+
+  return EXIT_SUCCESS;
+}
+
+int listOperation(int fd, char* path) {
+  // read directories/files from the server
+
+  // 1. send the number of files in the directory
+  int filesNumber = getDirectoryFilesNumber(path);
+  if (filesNumber == -1) {
+    return 5;
+  }
+  if (!sendDirectoryFilesNumber(fd, path)) {
+    return 6;
+  }
+
+  // 2. send the files in the directory
+  if (!sendDirectoryFiles(fd, path)) {
+    return 7;
+  }
+
   return EXIT_SUCCESS;
 }
