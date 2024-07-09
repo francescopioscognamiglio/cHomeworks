@@ -115,8 +115,8 @@ La fase di compilazione e linking è automatizzata mediante l'uso di Make.
 
 Quindi vi è la presenza del file Makefile che definisce:
 -   compilazione delle utility (utils, connection, sender e receiver)
--   compilazione di server e creazione dello script myFTserver
--   compilazione di client e creazione dello script myFTclient
+-   compilazione di server e creazione dello script `myFTserver`
+-   compilazione di client e creazione dello script `myFTclient`
 
 Per eseguire la build del programma posizionarsi nella cartella dei sorgenti ed eseguire il comando `make` come mostrato di seguito:
 
@@ -133,6 +133,6 @@ Per eseguire la build del programma posizionarsi nella cartella dei sorgenti ed 
     cc -o myFTclient utils.o connection.o sender.o receiver.o client-parser.o client.o
 
 ### Run
-Per eseguire il server è necessario posizionarsi nella cartella dei sorgenti ed eseguire lo script denominato `myFTserver` nel seguente modo: `francescopio@francescopio:~/homework2$ ./myFTserver`
+Per eseguire il server è necessario posizionarsi nella cartella dei sorgenti ed eseguire lo script denominato `myFTserver` nel seguente modo: `francescopio@francescopio:~/homework2$ ./myFTserver ...`
 
-Per eseguire il client è necessario posizionarsi nella cartella dei sorgenti ed eseguire lo script denominato `myFTclient` nel seguente modo: `francescopio@francescopio:~/homework2$ ./myFTclient`
+Per eseguire il client è necessario posizionarsi nella cartella dei sorgenti ed eseguire lo script denominato `myFTclient` nel seguente modo: `francescopio@francescopio:~/homework2$ ./myFTclient ...`
